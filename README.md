@@ -1,8 +1,7 @@
 # minipanel
+# 0. 需要使用 native中的java 库
 
-#0. 需要使用 native中的java 库
-
-#1. APK 必须系统签名
+# 1. APK 必须系统签名
 	android {
     compileSdkVersion 26
     defaultConfig {
@@ -36,7 +35,7 @@
     }
 }
 
-#2. APK需要ShareUID system
+# 2. APK需要ShareUID system
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.tclxa.minipanel.minipaneltest"
     coreApp="true"
