@@ -14,7 +14,7 @@
 
 LOCAL_PATH:= $(call my-dir)
 
-src_files := FontManager.c MicroPanelGui.c
+src_files := FontManager.c MicroPanelGui.c MicroPanelService.cpp
 
 #must modify OledDriver_intfApp.c following hardware
 #define DRIVER_HW_MODE	DRIVER_MODE_GPIO
@@ -50,7 +50,7 @@ include $(BUILD_STATIC_LIBRARY)
 #
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES += MicroPanelService.cpp MicroPanelServiceMain.cpp
+LOCAL_SRC_FILES += MicroPanelServiceMain.cpp
 LOCAL_C_INCLUDES += \
     external/freetype/include
 

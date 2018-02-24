@@ -1,6 +1,6 @@
 # minipanel
 # 0. 需要使用 native中的java 库
-
+	out/target/common/obj/JAVA_LIBRARIES/com.tclxa.minipanel.IMicroPanelService_intermediates/javalib.jar
 # 1. APK 必须系统签名
 	android {
     compileSdkVersion 26
@@ -40,3 +40,9 @@
     package="com.tclxa.minipanel.minipaneltest"
     coreApp="true"
     android:sharedUserId="android.uid.system">
+
+# 3. 功能说明
+	minipanelservice : native service
+	com.tclxa.minipanel.IMicroPanelService : java libraray
+	libminipanel : core library , C Client 
+	minipaneldump : dump oled framebuffer in console[DRIVER_SW_MODE must be DRIVER_MODE_APP in OledDriver_intfApp.c ]
