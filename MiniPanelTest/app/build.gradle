@@ -1,9 +1,6 @@
-# minipanel
+apply plugin: 'com.android.application'
 
-#0. 需要使用 native中的java 库
-
-#1. APK 必须系统签名
-	android {
+android {
     compileSdkVersion 26
     defaultConfig {
         applicationId "com.tclxa.minipanel.minipaneltest"
@@ -36,8 +33,11 @@
     }
 }
 
-#2. APK需要ShareUID system
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.tclxa.minipanel.minipaneltest"
-    coreApp="true"
-    android:sharedUserId="android.uid.system">
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    implementation files('libs/javalib.jar')
+}

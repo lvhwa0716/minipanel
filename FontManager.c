@@ -27,7 +27,7 @@ static void FontManager_ShowCallback_Dummy(unsigned char *bitmap, int w, int h, 
 	bpp = bpp;
 }
 
-int FontManager_Init(int screen_w, int screen_h, int bpp , unsigned char* framebuffer , FontManager_ShowCallbak cb) 
+int FontManager_Init(int screen_w, int screen_h, int bpp, int bpl, unsigned char* framebuffer, FontManager_ShowCallbak cb) 
 {
 	gFontManager.fontWidth = 16;
 	gFontManager.fontHeight = 16;
@@ -35,19 +35,19 @@ int FontManager_Init(int screen_w, int screen_h, int bpp , unsigned char* frameb
 	gFontManager.height = screen_h;
 	gFontManager.bpp = bpp;
 	gFontManager.load_flags = FT_LOAD_RENDER | FT_LOAD_DEFAULT;
+	gFontManager.bpl = bpl;
 
 	if(bpp == 1)
 	{
-		gFontManager.bpl = ((screen_w + 7) / 8) * screen_h;
 		gFontManager.load_flags |= FT_LOAD_MONOCHROME | FT_LOAD_TARGET_MONO;
 	}
 	else if(bpp == 8)
 	{
-		gFontManager.bpl = screen_w * screen_h;
+		
 	}
 	else
 	{
-		#ifdef DEBUG_FONTMANAGER
+		#ifdef DEBUG_LOG
 			fprintf ( stderr, "BPP not support , must 1 or 8 \n" );
 		#endif
 		return -1;
@@ -73,7 +73,7 @@ int FontManager_Init(int screen_w, int screen_h, int bpp , unsigned char* frameb
 		gFontManager.bitmap = (unsigned char*)calloc(gFontManager.bpl * gFontManager.height, sizeof(unsigned char));
 		if(gFontManager.bitmap == NULL)
 		{
-			#ifdef DEBUG_FONTMANAGER
+			#ifdef DEBUG_LOG
 				fprintf ( stderr, "allocate framebuffer error" );
 			#endif
 			return -2;
@@ -169,6 +169,20 @@ static inline void FontManager_1_blitfromFont( MWCOORD dstx, MWCOORD dsty,FT_Bit
 	MWCOORD h = srcpsd->rows;
 
 	// need clip
+	if(dstx < 0)
+	{
+		srcx = -dstx;
+		w = w + dstx;
+		dstx = 0;
+
+	}
+	if(dsty < 0)
+	{
+		srcy = -dsty;
+		h = h + dsty;
+		dsty = 0;
+	}
+
 	if( (dstx + w) > dstpsd->width)
 	{
 		w = dstpsd->width - dstx;
@@ -178,6 +192,10 @@ static inline void FontManager_1_blitfromFont( MWCOORD dstx, MWCOORD dsty,FT_Bit
 	{
 		h = dstpsd->height - dsty;
 	}
+
+	#ifdef DEBUG_LOG
+		fprintf ( stderr, "%d,%d,%d,%d\n", srcx, srcy,dstx,dsty);
+	#endif
 
 	if((h <= 0) || (w <= 0))
 	{
@@ -283,7 +301,7 @@ void FontManager_DrawString(char* text, int x, int y)
 			FT_UInt glyph_index = (FT_UInt)ch;
 			if ( gFontManager.faces[face_index]->charmap )
 				glyph_index = FT_Get_Char_Index( gFontManager.faces[face_index], ch );
-			#ifdef DEBUG_FONTMANAGER
+			#ifdef DEBUG_LOG
 				fprintf ( stderr, "debug glyph_index: %d\n", glyph_index );
 			#endif
 			if(glyph_index != 0) {
@@ -350,7 +368,9 @@ void FontManager_ShowCallback_Sample(unsigned char *bitmap, int w, int h, int bp
 	int  i, j;
 
 	unsigned char *image = bitmap;
-
+	#ifdef DEBUG_LOG
+		fprintf ( stderr, "Font Callback %d,%d,%d,%d\n", w, h, bpl, bpp );
+	#endif
 	if(bpp == 1)
 	{
 		for ( i = 0; i < h; i++ )

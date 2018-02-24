@@ -7,8 +7,6 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#define DEBUG_FONTMANAGER	1
-
 #define gFontSize 2
 
 typedef void (*FontManager_ShowCallbak)(unsigned char *bitmap, int w, int h, int bpl, int bpp);
@@ -30,7 +28,7 @@ struct FontManager_Struct {
 };
 
 // when framebuffer == NULL, must give FontManager_ShowCallbak, or ignore it, or nothing to show
-int FontManager_Init(int screen_w, int screen_h, int bpp , unsigned char* framebuffer,FontManager_ShowCallbak cb);
+int FontManager_Init(int screen_w, int screen_h, int bpp , int bpl, unsigned char* framebuffer,FontManager_ShowCallbak cb);
 void FontManager_DrawString(char* text, int x, int y);
 void FontManager_ClearBitmap(void);
 void FontManager_DeInit(void);
