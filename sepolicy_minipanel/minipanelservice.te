@@ -1,0 +1,31 @@
+# ==============================================
+# Policy File of /system/bin/minipanelservice Executable File 
+#  BoardConfig.mk
+#
+#  BOARD_SEPOLICY_DIRS += vendor/xian/minipanel/sepolicy_minipanel
+# 
+
+type minipanelservice, domain;
+type minipanelservice_exec , exec_type, file_type;
+
+# only for debug
+#permissive minipanelservice; 
+
+init_daemon_domain(minipanelservice)
+
+binder_use(minipanelservice)
+binder_call(minipanelservice, appdomain)
+binder_service(minipanelservice)
+
+
+allow minipanelservice shell_exec:file { read open execute execute_no_trans };
+
+#allow minipanelservice minipanelservice:service_manager add;
+
+allow minipanelservice oled128x32_device:chr_file { read write ioctl open };
+
+allow minipanelservice sysfs_misc_oled:file rw_file_perms;
+
+allow minipanelservice sysfs_spi_oled:file rw_file_perms;
+
+

@@ -1,0 +1,6 @@
+
+# lvh@tcl
+
+type oled128x32_device, dev_type;
+type sysfs_misc_oled, fs_type,sysfs_type;
+type sysfs_spi_oled, fs_type,sysfs_type;
