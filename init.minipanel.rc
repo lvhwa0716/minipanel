@@ -1,0 +1,17 @@
+# init.${ro.hardware}.rc , eg: devices/mediatek/mt6580/init.mt6580.rc
+#  add import init.minipanel.rc
+#  BoardConfig.mk
+#
+#  PRODUCT_COPY_FILES += vendor/xian/minipanel/init.minipanel.rc:root/init.minipanel.rc
+# 
+#
+
+service minipanelservice /system/bin/minipanelservice
+    class main
+    user root
+    group root system
+
+
+
+
+
