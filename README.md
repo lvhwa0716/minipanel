@@ -36,13 +36,26 @@
 }
 
 # 2. APK需要ShareUID system
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	<manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.tclxa.minipanel.minipaneltest"
     coreApp="true"
     android:sharedUserId="android.uid.system">
 
 # 3. 功能说明
 	minipanelservice : native service
+		BoardConfig.mk
+			PRODUCT_COPY_FILES += vendor/xian/minipanel/init.minipanel.rc:root/init.minipanel.rc
+
+		init.${ro.hardware}.rc
+			import init.minipanel.rc
+
 	com.tclxa.minipanel.IMicroPanelService : java libraray
 	libminipanel : core library , C Client 
 	minipaneldump : dump oled framebuffer in console[DRIVER_SW_MODE must be DRIVER_MODE_APP in OledDriver_intfApp.c ]
+
+# 4. sepolicy
+	BoardConfig.mk
+		BOARD_SEPOLICY_DIRS += vendor/xian/minipanel/sepolicy_minipanel
+
+
+
