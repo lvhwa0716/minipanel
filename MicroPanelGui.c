@@ -1,3 +1,6 @@
+
+#define LOG_TAG "MicroPanelService_gui"
+
 #include "FontManager.h"
 #include "MicroPanelGui.h"
 
@@ -102,7 +105,7 @@ void mpGui_HLine(int x1, int x2, int y)
 	if(x2 >= gMicroPanel.width) x2 = gMicroPanel.width - 1;
 	if(x1 < 0) x1 = 0;
 
-	fprintf ( stderr, "%d, %d, %d, %d\n", x1, x2,y, gMicroPanel.bpl );
+	DBG_LOG( "%d, %d, %d, %d\n", x1, x2,y, gMicroPanel.bpl );
 
 	if(gMicroPanel.opMode == MWROP_XOR) {
 		while(x1 <= x2) {

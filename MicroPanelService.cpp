@@ -9,7 +9,7 @@
 
 #include <utils/Vector.h>
 #include <utils/Errors.h>
-#include <utils/Log.h>
+//#include <utils/Log.h>
 #include <utils/String16.h>
 #include <utils/String8.h>
 #include <binder/IPCThreadState.h>
@@ -45,9 +45,7 @@ namespace android {
 	void mpGui_DrawString16(int x, int y, String16 str)
 	{
 		String8 str8(str);
-		#ifdef DEBUG_LOG
-			ALOGD("mpGui_DrawString16 : %s\n",str8.string());
-		#endif
+		DBG_LOG("mpGui_DrawString16 : %s\n",str8.string());
 		mpGui_DrawString(x, y, (char*)str8.string());
 	}
 	class BpMicroPanelService: public BpInterface<IMicroPanelService>
@@ -68,7 +66,7 @@ namespace android {
 				data.writeInt32(w);
 				data.writeInt32(h);
 				if (remote()->transact(MICROPANEL_RECT, data, &reply) != NO_ERROR) {
-					ALOGD("Rect could not contact remote\n");
+					DBG_ERR("Rect could not contact remote\n");
 				}
 
 			}
@@ -81,7 +79,7 @@ namespace android {
 				data.writeInt32(w);
 				data.writeInt32(h);
 				if (remote()->transact(MICROPANEL_FILLRECT, data, &reply) != NO_ERROR) {
-					ALOGD("FillRect could not contact remote\n");
+					DBG_ERR("FillRect could not contact remote\n");
 				}
 
 			}
@@ -91,7 +89,7 @@ namespace android {
 				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
 
 				if (remote()->transact(MICROPANEL_CLEARALL, data, &reply) != NO_ERROR) {
-					ALOGD("ClearAll could not contact remote\n");
+					DBG_ERR("ClearAll could not contact remote\n");
 				}
 
 			}
@@ -102,7 +100,7 @@ namespace android {
 				data.writeInt32(color);
 
 				if (remote()->transact(MICROPANEL_SETCOLOR, data, &reply) != NO_ERROR) {
-					ALOGD("SetColor could not contact remote\n");
+					DBG_ERR("SetColor could not contact remote\n");
 
 				}
 
@@ -115,7 +113,7 @@ namespace android {
 				data.writeInt32(y);
 				data.writeInt32(color);
 				if (remote()->transact(MICROPANEL_DRAWPIXEL, data, &reply) != NO_ERROR) {
-					ALOGD("DrawPixel could not contact remote\n");
+					DBG_ERR("DrawPixel could not contact remote\n");
 	
 				}
 
@@ -128,7 +126,7 @@ namespace android {
 				data.writeInt32(y);
 
 				if (remote()->transact(MICROPANEL_READPIXEL, data, &reply) != NO_ERROR) {
-					ALOGD("ReadPixel could not contact remote\n");
+					DBG_ERR("ReadPixel could not contact remote\n");
 					return 0;
 				}
 
@@ -155,7 +153,7 @@ namespace android {
 				data.writeInt32(y1);
 				data.writeInt32(y2);
 				if (remote()->transact(MICROPANEL_VLINE, data, &reply) != NO_ERROR) {
-					ALOGD("VLine could not contact remote\n");
+					DBG_ERR("VLine could not contact remote\n");
 
 				}
 
@@ -181,7 +179,7 @@ namespace android {
 				data.writeInt32(y);
 				data.writeString16(str);
 				if (remote()->transact(MICROPANEL_DRAWSTRING, data, &reply) != NO_ERROR) {
-					ALOGD("DrawString could not contact remote\n");
+					DBG_ERR("DrawString could not contact remote\n");
 
 				}
 
@@ -213,7 +211,7 @@ namespace android {
 
 			#endif
 				if (remote()->transact(MICROPANEL_DRAWBITMAP, data, &reply) != NO_ERROR) {
-					ALOGD("DrawBitmap could not contact remote\n");
+					DBG_ERR("DrawBitmap could not contact remote\n");
 				}
 
 			}
@@ -228,7 +226,7 @@ namespace android {
 				data.writeInt32(level);
 
 				if (remote()->transact(MICROPANEL_SLEEP, data, &reply) != NO_ERROR) {
-					ALOGD("Sleep could not contact remote\n");
+					DBG_ERR("Sleep could not contact remote\n");
 				}
 
 			}
@@ -238,7 +236,7 @@ namespace android {
 				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
 
 				if (remote()->transact(MICROPANEL_WAKEUP, data, &reply) != NO_ERROR) {
-					ALOGD("Wakeup could not contact remote\n");
+					DBG_ERR("Wakeup could not contact remote\n");
 
 				}
 
@@ -251,7 +249,7 @@ namespace android {
 
 
 				if (remote()->transact(MICROPANEL_BRIGHTNESS, data, &reply) != NO_ERROR) {
-					ALOGD("Brightness could not contact remote\n");
+					DBG_ERR("Brightness could not contact remote\n");
 				}
 			}
 			void UpdateScreen(int x, int y, int w, int h)
@@ -263,7 +261,7 @@ namespace android {
 				data.writeInt32(w);
 				data.writeInt32(h);
 				if (remote()->transact(MICROPANEL_UPADTESCREEN, data, &reply) != NO_ERROR) {
-					ALOGD("UpdateScreen could not contact remote\n");
+					DBG_ERR("UpdateScreen could not contact remote\n");
 				}
 			}
 	};
@@ -271,15 +269,15 @@ namespace android {
 	IMPLEMENT_META_INTERFACE(MicroPanelService, "com.tclxa.minipanel.IMicroPanelService");
 
 	BnMicroPanelService::BnMicroPanelService() {  
-		ALOGV("MicroPanelService created");  
+		DBG_LOG("MicroPanelService created");  
 	}
 
 	BnMicroPanelService::~BnMicroPanelService() {  
-		ALOGV("MicroPanelService destroyed");  
+		DBG_LOG("MicroPanelService destroyed");  
 	}
 
 	status_t BnMicroPanelService::onTransact(uint32_t code,const Parcel& data,Parcel* reply,uint32_t flags) {
-		ALOGE("BnMicroPanelService onTransact:: code= %d \n", code - IBinder::FIRST_CALL_TRANSACTION);
+		DBG_LOG("BnMicroPanelService onTransact:: code= %d \n", code - IBinder::FIRST_CALL_TRANSACTION);
 		switch(code){  
 			case MICROPANEL_SLEEP : {
 					CHECK_INTERFACE(IMicroPanelService, data, reply);

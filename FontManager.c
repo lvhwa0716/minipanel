@@ -1,6 +1,8 @@
 
-#include "FontManager.h"
+#define LOG_TAG "MicroPanelService_font"
 
+#include "FontManager.h"
+#include "MicroPanelGui.h"
 #include "math.h"
 
 static const char* gFontFile[gFontSize] = {
@@ -47,9 +49,8 @@ int FontManager_Init(int screen_w, int screen_h, int bpp, int bpl, unsigned char
 	}
 	else
 	{
-		#ifdef DEBUG_LOG
-			fprintf ( stderr, "BPP not support , must 1 or 8 \n" );
-		#endif
+		DBG_ERR( "BPP not support , must 1 or 8 \n" );
+
 		return -1;
 	}
 	int error = FT_Init_FreeType( &gFontManager.library ); 
@@ -73,9 +74,8 @@ int FontManager_Init(int screen_w, int screen_h, int bpp, int bpl, unsigned char
 		gFontManager.bitmap = (unsigned char*)calloc(gFontManager.bpl * gFontManager.height, sizeof(unsigned char));
 		if(gFontManager.bitmap == NULL)
 		{
-			#ifdef DEBUG_LOG
-				fprintf ( stderr, "allocate framebuffer error" );
-			#endif
+			DBG_ERR( "allocate framebuffer error" );
+
 			return -2;
 		}
 	}
@@ -193,9 +193,8 @@ static inline void FontManager_1_blitfromFont( MWCOORD dstx, MWCOORD dsty,FT_Bit
 		h = dstpsd->height - dsty;
 	}
 
-	#ifdef DEBUG_LOG
-		fprintf ( stderr, "%d,%d,%d,%d\n", srcx, srcy,dstx,dsty);
-	#endif
+	DBG_LOG( "%d,%d,%d,%d\n", srcx, srcy,dstx,dsty);
+
 
 	if((h <= 0) || (w <= 0))
 	{
@@ -301,9 +300,9 @@ void FontManager_DrawString(char* text, int x, int y)
 			FT_UInt glyph_index = (FT_UInt)ch;
 			if ( gFontManager.faces[face_index]->charmap )
 				glyph_index = FT_Get_Char_Index( gFontManager.faces[face_index], ch );
-			#ifdef DEBUG_LOG
-				fprintf ( stderr, "debug glyph_index: %d\n", glyph_index );
-			#endif
+
+			DBG_LOG( "debug glyph_index: %d\n", glyph_index );
+
 			if(glyph_index != 0) {
 				slot = gFontManager.faces[face_index]->glyph;
 				FT_Set_Transform( gFontManager.faces[face_index], NULL /*&matrix*/, &pen );
@@ -368,9 +367,9 @@ void FontManager_ShowCallback_Sample(unsigned char *bitmap, int w, int h, int bp
 	int  i, j;
 
 	unsigned char *image = bitmap;
-	#ifdef DEBUG_LOG
-		fprintf ( stderr, "Font Callback %d,%d,%d,%d\n", w, h, bpl, bpp );
-	#endif
+
+	DBG_LOG("Font Callback %d,%d,%d,%d\n", w, h, bpl, bpp );
+
 	if(bpp == 1)
 	{
 		for ( i = 0; i < h; i++ )

@@ -1,4 +1,5 @@
 
+#define LOG_TAG "MicroPanelService_intf"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -6,6 +7,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include "MicroPanelGui.h"
 extern const int GPIO_LCD_CS_IDX;
 extern const int GPIO_LCD_RST_IDX;
 extern const int GPIO_LCD_DC_IDX;
@@ -227,25 +229,19 @@ void OledDriver_intfApp_Init(void)
 	#if (DRIVER_SW_MODE == DRIVER_MODE_APP)
 		fd_OLED_BUFFER = open(OLED_BUFFER, O_RDWR);
 		if(fd_OLED_BUFFER < 0){
-			#ifdef DEBUG_LOG
-				fprintf ( stderr, "%s open failed \n" , OLED_BUFFER);
-			#endif
+			DBG_ERR("%s open failed \n" , OLED_BUFFER);
 			return ;
 		}
 
 		fd_OLED_POWER = open(OLED_POWER, O_RDWR);
 		if(fd_OLED_POWER < 0){
-			#ifdef DEBUG_LOG
-				fprintf ( stderr, "%s open failed \n" , OLED_POWER);
-			#endif
+			DBG_ERR( "%s open failed \n" , OLED_POWER);
 			return ;
 		}
 
 		fd_OLED_BRIGHT = open(OLED_BRIGHT, O_RDWR);
 		if(fd_OLED_BRIGHT < 0){
-			#ifdef DEBUG_LOG
-				fprintf ( stderr, "%s open failed \n" , OLED_BRIGHT);
-			#endif
+			DBG_ERR("%s open failed \n" , OLED_BRIGHT);
 			return ;
 		}
 	#elif (DRIVER_SW_MODE == DRIVER_MODE_GPIO)
@@ -260,23 +256,17 @@ void OledDriver_intfApp_Init(void)
 	#elif (DRIVER_SW_MODE == DRIVER_MODE_SPI)
 		fdPinCtrl = open(PIN_CTRL, O_WRONLY);
 		if(fdPinCtrl < 0){
-			#ifdef DEBUG_LOG
-				fprintf ( stderr, "%s open failed \n" , PIN_CTRL);
-			#endif
+			DBG_ERR("%s open failed \n" , PIN_CTRL);
 			return ;
 		}
 		fdSpiCtrl = open(SPI_RAW, O_RDWR);
 		if(fdSpiCtrl < 0){
-			#ifdef DEBUG_LOG
-				fprintf ( stderr, "%s open failed \n" , SPI_RAW);
-			#endif
+			DBG_ERR("%s open failed \n" , SPI_RAW);
 			return ;
 		}
 		fdSpiCfg = open(SPI_CFG, O_WRONLY);
 		if(fdSpiCfg < 0){
-			#ifdef DEBUG_LOG
-				fprintf ( stderr, "%s open failed \n" , SPI_CFG);
-			#endif
+			DBG_ERR("%s open failed \n" , SPI_CFG);
 			return ;
 		}
 		Oled_Init();
@@ -307,6 +297,11 @@ void OledDriver_intfApp_Sleep(void)
 {
 	#if (DRIVER_SW_MODE == DRIVER_SW_MODE_APP)
 		static const char * CmdString = "0";
+		if(fd_OLED_POWER < 0)
+		{
+			DBG_ERR("OLED_POWER not open");
+			return ;
+		}
 		write(fd_OLED_POWER, CmdString, 2);
 	#else
 		Oled_Sleep();
@@ -316,6 +311,11 @@ void OledDriver_intfApp_WakeUp(void)
 {
 	#if (DRIVER_SW_MODE == DRIVER_SW_MODE_APP)
 		static const char * CmdString = "1";
+		if(fd_OLED_POWER < 0)
+		{
+			DBG_ERR("OLED_POWER not open");
+			return ;
+		}
 		write(fd_OLED_POWER, CmdString, 2);
 	#else
 		Oled_WakeUp();
@@ -328,8 +328,13 @@ void OledDriver_intfApp_Brightness(int b)
 		char CmdString[16];
 		int size;
 		b = b & 0xFF; // only 255
+		if(fd_OLED_BRIGHT < 0)
+		{
+			DBG_ERR("OLED_BRIGHT not open");
+			return ;
+		}
 		size = snprintf(CmdString, 15, "%02X", b);
-		write(fd_OLED_POWER, CmdString, size + 1);
+		write(fd_OLED_BRIGHT, CmdString, size + 1);
 	#else
 		Oled_Brightness(b);
 	#endif
@@ -337,6 +342,11 @@ void OledDriver_intfApp_Brightness(int b)
 void OledDriver_intfApp_UpdateAll(unsigned char *pBuf)
 {
 	#if (DRIVER_SW_MODE == DRIVER_SW_MODE_APP)
+		if(fd_OLED_BUFFER < 0)
+		{
+			DBG_ERR("OLED_BUFFER not open");
+			return ;
+		}
 		write(fd_OLED_BUFFER, pBuf, 128 * 32 / 8);
 	#else
 		Oled_UpdateAll(pBuf);

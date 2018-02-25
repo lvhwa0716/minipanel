@@ -1,6 +1,9 @@
 #ifndef __MICROPANELGUI_H__
 #define __MICROPANELGUI_H__
 
+#include <stdio.h>
+#include <unistd.h>
+
 // most code copy from microwin
 
 #define MICROPANEL_WIDTH	128
@@ -20,6 +23,25 @@
 #define MICROPANEL_POWER_OFF	0
 #define MICROPANEL_POWER_SLEEP	1
 #define MICROPANEL_POWER_ACTIVE	2
+
+#ifdef DEBUG_LOG
+	#ifdef ANDROID
+		#include <utils/Log.h>
+		#define DBG_LOG(fmt,arg...) ALOGD(fmt, ##arg)
+		#define DBG_ERR(fmt,arg...) ALOGE(fmt, ##arg)
+	#else
+		#define DBG_LOG(fmt,arg...) fprintf ( stdout, fmt, ##arg)
+		#define DBG_ERR(fmt,arg...) fprintf ( stderr, fmt, ##arg)
+	#endif
+#else
+	#define DBG_LOG(fmt,arg...)
+	#ifdef ANDROID
+		#include <utils/Log.h>
+		#define DBG_ERR(fmt,arg...) ALOGE(fmt, ##arg)
+	#else
+		#define DBG_ERR(fmt,arg...) fprintf ( stderr, fmt, ##arg)
+	#endif
+#endif
 
 #if defined(__cplusplus)
 extern "C" {

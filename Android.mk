@@ -45,6 +45,16 @@ LOCAL_SHARED_LIBRARIES := \
 
 include $(BUILD_STATIC_LIBRARY)
 
+
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := init.minipanel.rc
+LOCAL_SRC_FILES := $(LOCAL_MODULE)
+LOCAL_MODULE_CLASS := ETC
+LOCAL_MODULE_PATH := $(TARGET_ROOT_OUT)
+
+include $(BUILD_PREBUILT)
+
 #
 # Build for the MicroPanelService.
 #
@@ -133,3 +143,7 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := minipaneldump
 
 include $(BUILD_EXECUTABLE)
+
+
+
+
