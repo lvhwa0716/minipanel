@@ -57,5 +57,8 @@
 	BoardConfig.mk
 		BOARD_SEPOLICY_DIRS += vendor/i029/display/minipanel/sepolicy_minipanel
 
-
+	Debug :
+		a. ls -Z   查看文件属性(system , boot )
+		b. getprop | grep init.svc  查看启动状态
+		c. dmesg , logcat
 
