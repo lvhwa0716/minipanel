@@ -59,7 +59,7 @@ int main( int     argc, char**  argv )
 	//mpGui_FillRect(1, 1, 32, 31);
 	FontManager_DrawString(argv[1], 1 , 1);
 
-	mpGui_UpdateScreen();
+	mpGui_UpdateScreen(0,0,128,32);
 	mpGui_DeInit();
 #endif
 	return 0;

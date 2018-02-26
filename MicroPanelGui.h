@@ -78,7 +78,7 @@ void mpGui_DeInit(void);
 void mpGui_Sleep(int level);
 void mpGui_Wakeup(void);
 void mpGui_Brightness(int b);
-void mpGui_UpdateScreen(void);
+void mpGui_UpdateScreen(int x, int y, int w, int h);
 
 #if defined(__cplusplus)
 }

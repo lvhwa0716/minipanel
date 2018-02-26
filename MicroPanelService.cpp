@@ -507,11 +507,7 @@ namespace android {
 	}
 	void MicroPanelService::UpdateScreen(int x, int y, int w, int h)
 	{
-		x = x;
-		y = y;
-		w = w;
-		h = h;
-		mpGui_UpdateScreen();
+		mpGui_UpdateScreen( x,  y,  w,  h);
 	}
 
 }

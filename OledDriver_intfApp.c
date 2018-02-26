@@ -22,7 +22,7 @@ extern void Oled_DeInit(void);
 extern void Oled_Sleep(void);
 extern void Oled_WakeUp(void);
 extern void Oled_Brightness(int b);
-extern void Oled_UpdateAll(unsigned char *pBuf);
+extern void Oled_UpdateRect(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2,unsigned char *pBuf);
 
 #define DRIVER_MODE_APP	0
 #define DRIVER_MODE_GPIO	1
@@ -62,6 +62,8 @@ extern void Oled_UpdateAll(unsigned char *pBuf);
 	// "XX" = bright , hex(upcase)
 	#define OLED_BRIGHT "/sys/class/misc/oled128x32/oled_bright"
 
+	#define OLED_DEVICE "/dev/oled128x32"
+
 #elif (DRIVER_HW_MODE == DRIVER_MODE_SPI)
 	//"-px y" => x: pin number , y = level
 	//-px 0|1   , x=0 RST ; 1 DC ; 2 CS; 3 SCLK; 4 SDIN
@@ -80,6 +82,8 @@ extern void Oled_UpdateAll(unsigned char *pBuf);
 	#define OLED_POWER "/sys/class/spi_master/spi0/spi0.1/oled_power"
 	// "XX" = bright , hex(upcase)
 	#define OLED_BRIGHT "/sys/class/spi_master/spi0/spi0.1/oled_bright"
+
+	#define OLED_DEVICE "/dev/oled128x32"
 #endif
 
 
@@ -92,6 +96,7 @@ static void drv_udelay(int usec)
 	static int fd_OLED_BUFFER = -1;
 	static int fd_OLED_POWER = -1;
 	static int fd_OLED_BRIGHT = -1;
+	static int fd_OLED_DEVICE = -1;
 	// following not use
 	void Reset_Command(void)
 	{
@@ -227,6 +232,12 @@ static void drv_udelay(int usec)
 void OledDriver_intfApp_Init(void)
 {
 	#if (DRIVER_SW_MODE == DRIVER_MODE_APP)
+		fd_OLED_DEVICE = open(OLED_DEVICE, O_RDWR);
+		if(fd_OLED_DEVICE < 0){
+			DBG_ERR("%s open failed \n" , OLED_DEVICE);
+			return ;
+		}
+
 		fd_OLED_BUFFER = open(OLED_BUFFER, O_RDWR);
 		if(fd_OLED_BUFFER < 0){
 			DBG_ERR("%s open failed \n" , OLED_BUFFER);
@@ -339,7 +350,7 @@ void OledDriver_intfApp_Brightness(int b)
 		Oled_Brightness(b);
 	#endif
 }
-void OledDriver_intfApp_UpdateAll(unsigned char *pBuf)
+void OledDriver_intfApp_Update(unsigned char *pBuf, int x, int y, int w, int h)
 {
 	#if (DRIVER_SW_MODE == DRIVER_SW_MODE_APP)
 		if(fd_OLED_BUFFER < 0)
@@ -349,7 +360,7 @@ void OledDriver_intfApp_UpdateAll(unsigned char *pBuf)
 		}
 		write(fd_OLED_BUFFER, pBuf, 128 * 32 / 8);
 	#else
-		Oled_UpdateAll(pBuf);
+		Oled_UpdateRect(x, y, x+w, y+h, pBuf);
 	#endif
 }
 

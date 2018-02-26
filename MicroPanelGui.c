@@ -326,7 +326,7 @@ extern void OledDriver_intfApp_DeInit(void);
 extern void OledDriver_intfApp_Sleep(void);
 extern void OledDriver_intfApp_WakeUp(void);
 extern void OledDriver_intfApp_Brightness(int b);
-extern void OledDriver_intfApp_UpdateAll(unsigned char *pBuf);
+extern void OledDriver_intfApp_Update(unsigned char *pBuf, int x, int y, int w, int h);
 
 void mpGui_Init(void)
 {
@@ -368,11 +368,13 @@ void mpGui_Brightness(int b)
 {
 	OledDriver_intfApp_Brightness(b);
 }
-void mpGui_UpdateScreen(void)
+void mpGui_UpdateScreen(int x, int y, int w, int h)
 {
 	
-	OledDriver_intfApp_UpdateAll(gMicroPanel.buffer);
-	mpGui_Print2Console(); // debug
+	OledDriver_intfApp_Update(gMicroPanel.buffer, x, y, w, h);
+	#if defined(DEBUG_LOG)
+		mpGui_Print2Console(); // debug
+	#endif
 }
 static void mpGui_Print2Console(void) {
 	int  i, j;
