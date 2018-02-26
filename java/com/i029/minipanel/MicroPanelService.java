@@ -1,4 +1,4 @@
-package com.tclxa.minipanel;
+package com.i029.minipanel;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -12,9 +12,9 @@ public class MicroPanelService {
     //private IMicroPanelService microPanelService;
 
 	public static IMicroPanelService getMicroPanelService() {
-		IBinder binder = ServiceManager.getService("tclxa.minipanel");
+		IBinder binder = ServiceManager.getService("i029.minipanel");
 		if(binder == null) {
-			Log.e(TAG, "tclxa.minipanel not found ");
+			Log.e(TAG, "i029.minipanel not found ");
 			return null;
 		}
 		IMicroPanelService s = IMicroPanelService.Stub.asInterface(binder);

@@ -1,6 +1,6 @@
 
 
-# lvh@tcl
+# lvh@i029
 
 /system/bin/minipanelservice u:object_r:minipanelservice_exec:s0
 /system/bin/minipaneldump u:object_r:minipanelservice_exec:s0

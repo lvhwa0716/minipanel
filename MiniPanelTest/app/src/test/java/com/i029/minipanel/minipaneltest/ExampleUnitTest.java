@@ -1,4 +1,4 @@
-package com.tclxa.minipanel.minipaneltest;
+package com.i029.minipanel.minipaneltest;
 
 import org.junit.Test;
 

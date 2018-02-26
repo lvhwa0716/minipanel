@@ -1,4 +1,4 @@
-package com.tclxa.minipanel.minipaneltest;
+package com.i029.minipanel.minipaneltest;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -9,8 +9,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.tclxa.minipanel.IMicroPanelService;
-import com.tclxa.minipanel.MicroPanelService;
+import com.i029.minipanel.IMicroPanelService;
+import com.i029.minipanel.MicroPanelService;
 
 public class MainActivity extends Activity implements View.OnClickListener {
     static final String TAG = "MiniPanelTest";

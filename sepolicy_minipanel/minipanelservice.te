@@ -2,7 +2,7 @@
 # Policy File of /system/bin/minipanelservice Executable File 
 #  BoardConfig.mk
 #
-#  BOARD_SEPOLICY_DIRS += vendor/xian/minipanel/sepolicy_minipanel
+#  BOARD_SEPOLICY_DIRS += vendor/i029/minipanel/sepolicy_minipanel
 # 
 
 type minipanelservice, domain;

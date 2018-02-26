@@ -90,7 +90,7 @@ include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := com.tclxa.minipanel.IMicroPanelService
+LOCAL_MODULE := com.i029.minipanel.IMicroPanelService
 LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := $(call all-java-files-under, java) $(call all-Iaidl-files-under, java)
 

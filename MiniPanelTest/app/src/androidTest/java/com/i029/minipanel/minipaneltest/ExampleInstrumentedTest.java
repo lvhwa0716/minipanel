@@ -1,4 +1,4 @@
-package com.tclxa.minipanel.minipaneltest;
+package com.i029.minipanel.minipaneltest;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.tclxa.minipanel.minipaneltest", appContext.getPackageName());
+        assertEquals("com.i029.minipanel.minipaneltest", appContext.getPackageName());
     }
 }

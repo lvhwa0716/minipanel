@@ -2,7 +2,7 @@
 #  add import init.minipanel.rc
 #  BoardConfig.mk
 #
-#  PRODUCT_COPY_FILES += vendor/xian/minipanel/init.minipanel.rc:root/init.minipanel.rc
+#  PRODUCT_COPY_FILES += vendor/i029/minipanel/init.minipanel.rc:root/init.minipanel.rc
 # 
 #
 

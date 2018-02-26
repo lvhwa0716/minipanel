@@ -64,7 +64,7 @@ namespace android {
 
 		static void instantiate() {
 			defaultServiceManager()->addService(
-				    String16("tclxa.minipanel"), new MicroPanelService());
+				    String16("i029.minipanel"), new MicroPanelService());
 		}
 		MicroPanelService();
 		virtual ~MicroPanelService();

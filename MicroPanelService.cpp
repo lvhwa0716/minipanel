@@ -266,7 +266,7 @@ namespace android {
 			}
 	};
 	
-	IMPLEMENT_META_INTERFACE(MicroPanelService, "com.tclxa.minipanel.IMicroPanelService");
+	IMPLEMENT_META_INTERFACE(MicroPanelService, "com.i029.minipanel.IMicroPanelService");
 
 	BnMicroPanelService::BnMicroPanelService() {  
 		DBG_LOG("MicroPanelService created");  

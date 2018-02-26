@@ -1,4 +1,4 @@
-package com.tclxa.minipanel;
+package com.i029.minipanel;
 
 interface IMicroPanelService {
 	void Sleep(int level);
