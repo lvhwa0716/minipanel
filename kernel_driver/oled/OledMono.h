@@ -37,13 +37,14 @@ struct oled128x32_obj_t {
 	
 	int power_state;
 	int brightness;
+	int need_update;
 	char frame_buffer[OLED_FRAMEBUFFER_LENGTH];
 };
 
 #define oled128x32_rectUpdate_headSize	(sizeof(unsigned short) * 6)
 struct oled128x32_rectUpdate {
-	unsigned short x;
-	unsigned short y;
+	short x;
+	short y;
 	unsigned short w;
 	unsigned short h;
 	unsigned short bpl;

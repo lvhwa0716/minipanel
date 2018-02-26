@@ -8,7 +8,7 @@ extern void Oled_Sleep(void);
 extern void Oled_WakeUp(void);
 extern void Oled_Brightness(int b);
 extern void Oled_UpdateAll(unsigned char *pBuf);
-
+extern void Oled_UpdateRect(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2,unsigned char *pBuf);
 
 
 
@@ -16,6 +16,7 @@ extern void Oled_UpdateAll(unsigned char *pBuf);
 static struct oled128x32_obj_t oled128x32_private = {
 	.power_state = 1,
 	.brightness = -1,
+	.need_update = 0,
 	/* .lock = __SPIN_LOCK_UNLOCKED(die.lock), */
 };
 
@@ -25,6 +26,82 @@ struct oled128x32_obj_t *oled128x32_ptr = &oled128x32_private;
 int oled128x32_init_status = 0;
 
 extern void OledDriver_SetPin(int pin, int level);
+
+static void drv_bitblt(short dstx, short dsty, 
+		unsigned char* bmp, unsigned short bmp_w, unsigned short bmp_h, 
+		unsigned short bmp_pitch , int bmp_bpp)
+{
+	static const unsigned char notmask[8] = {
+		0x7f, 0xbf, 0xdf, 0xef, 0xf7, 0xfb, 0xfd, 0xfe};
+	int		i;
+	int srcx = 0;
+	int srcy = 0;
+	
+	int		dpitch = 128 / 8;
+	int		spitch = bmp_pitch;
+
+	int 	dst_w = 128;
+	int 	dst_h = 32;
+
+	int w = bmp_w;
+	int h = bmp_h;
+	unsigned char* dst;
+	unsigned char* src;
+
+	bmp_bpp = bmp_bpp; // not used , must set 1
+	// need clip
+	if(dstx < 0)
+	{
+		srcx = -dstx;
+		w = w + dstx;
+		dstx = 0;
+
+	}
+	if(dsty < 0)
+	{
+		srcy = -dsty;
+		h = h + dsty;
+		dsty = 0;
+	}
+
+	if( (dstx + w) > dst_w)
+	{
+		w = dst_w - dstx;
+	}
+
+	if( (dsty + h) > dst_h)
+	{
+		h = dst_h - dsty;
+	}
+
+	if((h <= 0) || (w <= 0))
+	{
+		return;
+	}
+
+	/* src is LSB 1bpp, dst is LSB 1bpp*/
+	dst = ((unsigned char*)oled128x32_ptr->frame_buffer) + (dstx>>3) + dsty * dpitch;
+	src = ((unsigned char*)bmp) + (srcx>>3) + srcy * spitch;
+
+
+	while(--h >= 0) {
+		unsigned char*	d = dst;
+		unsigned char*	s = src;
+		int	dx = dstx;
+		int	sx = srcx;
+
+		for(i=0; i<w; ++i) {
+			*d = (*d & notmask[dx&7]) | ((*s >> (7 - (sx&7)) & 0x01) << (7 - (dx&7)));
+			if((++dx & 7) == 0)
+				++d;
+			if((++sx & 7) == 0)
+				++s;
+		}
+		dst += dpitch;
+		src += spitch;
+	}
+}
+
 #ifdef USE_GPIO
 /*****************************************************************************/
 /* File operation                                                            */
@@ -172,7 +249,12 @@ oled128x32_storeRaw(struct device *dev, struct device_attribute *attr, const cha
 			return count;
 		}
 		// do any op here
-		Oled_UpdateAll((unsigned char *)bufRaw);
+		if(oled128x32_ptr->power_state == 1) {
+			Oled_UpdateAll((unsigned char *)oled128x32_ptr->frame_buffer);
+			oled128x32_ptr->need_update = 0;
+		} else {
+			oled128x32_ptr->need_update = 1;
+		}
 	
 		up(&oled128x32_ptr->driver_lock);
 	}
@@ -212,9 +294,45 @@ oled128x32_storeRawRect(struct device *dev, struct device_attribute *attr, const
 	}
 
 	// TODO , bitblt rect to oled128x32_ptr->frame_buffer
-	
+	drv_bitblt(pRect->x, pRect->y, pRect->frame_buffer, pRect->w, pRect->h, pRect->bpl , 1);
 	// TODO , update rect oled128x32_ptr->frame_buffer to oled
+	{
 
+		int rt = down_interruptible(&oled128x32_ptr->driver_lock);
+		if (rt < 0) {
+			up(&oled128x32_ptr->driver_lock);
+			return count;
+		}
+		// do any op here
+		if(oled128x32_ptr->power_state == 1) {
+			short x1,y1,x2,y2;
+			x1 = pRect->x;
+			y1 = pRect->y;
+
+			x2 = pRect->x + (short)pRect->w;
+			y2 = pRect->y + (short)pRect->h;
+			if(pRect->x < 0)
+			{
+				x1 = 0;
+			}
+			if(pRect->y < 0)
+			{
+				y1 = 0;
+			}
+
+
+			if((x2 > 0) && (y2 > 0))
+			{
+				Oled_UpdateRect(x1,y1,x2,y2,(unsigned char *)oled128x32_ptr->frame_buffer);
+				oled128x32_ptr->need_update = 0;
+			}
+			
+		} else {
+			oled128x32_ptr->need_update = 1;
+		}
+	
+		up(&oled128x32_ptr->driver_lock);
+	}
 	return count;
 }
 static ssize_t oled128x32_showString(struct device *dev, struct device_attribute *attr, char *buf)
@@ -291,6 +409,11 @@ oled128x32_storePower(struct device *dev, struct device_attribute *attr, const c
 	else
 	{
 		Oled_WakeUp();
+		if(oled128x32_ptr->need_update == 1)
+		{
+			Oled_UpdateAll((unsigned char *)oled128x32_ptr->frame_buffer);
+			oled128x32_ptr->need_update = 0;
+		}
 	}
 	oled128x32_ptr->power_state = state;
 	up(&oled128x32_ptr->driver_lock);
