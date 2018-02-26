@@ -17,6 +17,7 @@ binder_use(minipanelservice)
 binder_call(minipanelservice, appdomain)
 binder_service(minipanelservice)
 
+allow minipanelservice minipanelservice_service:service_manager  { add find };
 
 allow minipanelservice shell_exec:file { read open execute execute_no_trans };
 
