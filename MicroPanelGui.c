@@ -371,9 +371,34 @@ void mpGui_Brightness(int b)
 void mpGui_UpdateScreen(int x, int y, int w, int h)
 {
 	
+	if( x < 0 ) {
+		w = x + w;
+		x = 0;
+	}
+	if( y < 0 ) {
+		h = y + w;
+		y = 0;
+	}
+
+	if( (w + x) >= MICROPANEL_WIDTH ) {
+		w = x + w - MICROPANEL_WIDTH + 1;
+		return;
+	}
+
+	if( (h + y) >= MICROPANEL_HEIGHT ) {
+		h = y + h - MICROPANEL_HEIGHT + 1;
+		return;
+	}
+
+	if( ( w <= 0 ) || (h <= 0) ) {
+		return;
+	}
+
+
+
 	OledDriver_intfApp_Update(gMicroPanel.buffer, x, y, w, h);
 	#if defined(DEBUG_LOG)
-		mpGui_Print2Console(); // debug
+		//mpGui_Print2Console(); // debug
 	#endif
 }
 static void mpGui_Print2Console(void) {

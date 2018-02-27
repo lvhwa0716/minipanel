@@ -33,7 +33,6 @@ struct oled128x32_obj_t {
 	struct cdev chrdev;
 	*/
 	struct miscdevice *misc;
-	struct semaphore driver_lock;
 	
 	int power_state;
 	int brightness;

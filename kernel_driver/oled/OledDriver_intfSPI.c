@@ -314,8 +314,6 @@ static int oled128x32_probe(struct spi_device *spi)
 	int err;
 	spi_oled128x32 = spi;
 
-	sema_init(&oled128x32_ptr->driver_lock, 1);
-
 	#ifdef DIRECT_GPIO
 		mt_set_gpio_mode(OLEDDRIVER_PIN_INDEX[GPIO_LCD_RST_IDX], GPIO_LCD_RST_MODE);
 		mt_set_gpio_dir(OLEDDRIVER_PIN_INDEX[GPIO_LCD_RST_IDX], GPIO_DIR_OUT);

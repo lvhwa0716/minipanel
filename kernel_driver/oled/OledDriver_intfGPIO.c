@@ -61,7 +61,7 @@ void OledDriver_SetPin(int pin, int level)
 		OLED_LOG("PIN_INDEX = %d, level = %d , status=0x%08X\n", OLEDDRIVER_PIN_INDEX[pin], (level == 0 ? 0 : 1),oled128x32_init_status);
 		return ;
 	}
-	OLED_LOG("PIN_INDEX = %d, level = %d\n", OLEDDRIVER_PIN_INDEX[pin], (level == 0 ? 0 : 1));
+	//OLED_LOG("PIN_INDEX = %d, level = %d\n", OLEDDRIVER_PIN_INDEX[pin], (level == 0 ? 0 : 1));
 	if( (pin < 0 ) || (pin > GPIO_LCD_SDIN_IDX) ) {
 		return ; // error
 	}
@@ -149,7 +149,6 @@ static int oled128x32_probe(struct platform_device *dev)
 	int err = 0;
 	struct miscdevice *misc = &oled128x32_device;
 	memset(oled128x32_ptr->frame_buffer, 0 , OLED_FRAMEBUFFER_LENGTH);
-	sema_init(&oled128x32_ptr->driver_lock, 1);
 
 	#ifdef DIRECT_GPIO
 		mt_set_gpio_mode(OLEDDRIVER_PIN_INDEX[GPIO_LCD_CS_IDX], GPIO_LCD_CS_MODE);

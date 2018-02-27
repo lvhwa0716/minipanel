@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+# must add BoardConfig.mk
+# PRODUCT_PACKAGES += minipanelservice
+#
+
 LOCAL_PATH:= $(call my-dir)
 
 src_files := FontManager.c MicroPanelGui.c MicroPanelService.cpp
@@ -46,15 +51,6 @@ LOCAL_SHARED_LIBRARIES := \
 include $(BUILD_STATIC_LIBRARY)
 
 
-include $(CLEAR_VARS)
-
-LOCAL_MODULE := init.minipanel.rc
-LOCAL_SRC_FILES := $(LOCAL_MODULE)
-LOCAL_MODULE_CLASS := ETC
-LOCAL_MODULE_PATH := $(TARGET_ROOT_OUT)
-
-include $(BUILD_PREBUILT)
-
 #
 # Build for the MicroPanelService.
 #
@@ -79,7 +75,7 @@ LOCAL_SHARED_LIBRARIES := \
 
 
 LOCAL_STATIC_LIBRARIES := libminipanel
-LOCAL_MODULE_TAGS := optional
+#LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := minipanelservice
 
 include $(BUILD_EXECUTABLE)
@@ -143,6 +139,12 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := minipaneldump
 
 include $(BUILD_EXECUTABLE)
+
+
+BOARD_SEPOLICY_DIRS += vendor/i029/display/minipanel/sepolicy_minipanel
+PRODUCT_COPY_FILES += vendor/i029/display/minipanel/init.minipanel.rc:root/init.minipanel.rc
+PRODUCT_PACKAGES += minipanelservice
+
 
 
 

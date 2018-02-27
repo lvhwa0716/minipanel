@@ -1,6 +1,8 @@
 
 
 #include "OledMono.h"
+#include "OledMonoIoctl.h"
+
 // mdelay udelay ndelay
 
 extern const int Brightness;
@@ -22,6 +24,8 @@ static struct oled128x32_obj_t oled128x32_private = {
 
 
 struct oled128x32_obj_t *oled128x32_ptr = &oled128x32_private;
+
+static DEFINE_MUTEX(oled_mutex);
 
 int oled128x32_init_status = 0;
 
@@ -138,29 +142,80 @@ static int oled128x32_release(struct inode *inode, struct file *file)
 /*---------------------------------------------------------------------------*/
 static long oled128x32_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
-
-	long res;
-
-
+	OLED_LOG("cmd = %08X" , cmd);
 	switch (cmd) {
-	case 0:
-		{
-			res = 0;
+		case OLED_SLEEP:
+		case OLED_WAKEUP: {
+			unsigned char state;
+			mutex_lock(&oled_mutex);
+			// do any op here
+			state = (cmd == OLED_SLEEP ? 0 : 1);
+
+			if(state == 0)
+			{
+				Oled_Sleep();
+			}
+			else
+			{
+				Oled_WakeUp();
+				if(oled128x32_ptr->need_update == 1)
+				{
+					Oled_UpdateAll((unsigned char *)oled128x32_ptr->frame_buffer);
+					oled128x32_ptr->need_update = 0;
+				}
+			}
+			oled128x32_ptr->power_state = state;
+			mutex_unlock(&oled_mutex);
 			break;
 		}
-	
-	default:
-		{
-			res = -EPERM;
+		case OLED_BRIGHTNESS: {
+			int brightness = 0;
+			if(copy_from_user(&brightness, (int*)arg, sizeof(int)))
+				return -EFAULT;
+			mutex_lock(&oled_mutex);
+			// do any op here
+			Oled_Brightness((unsigned char)(brightness & 0xFF));
+			oled128x32_ptr->brightness = brightness;
+
+			mutex_unlock(&oled_mutex);
+			break;
+		}
+		case OLED_UPDATERECT: {
+			struct oled_rect _oled_rect;
+			unsigned short x1,y1,x2,y2;
+			if (copy_from_user(&_oled_rect, (struct oled_rect*)arg, sizeof(struct oled_rect))) {
+				OLED_LOG(" copy framebuff error\n");
+				return -EFAULT;
+			}
+			x1 = _oled_rect.x;
+			y1 = _oled_rect.y;
+			x2 = _oled_rect.x + _oled_rect.w;
+			y2 = _oled_rect.y + _oled_rect.h;
+			if( (x2 > 127) || (y2 > 31))
+				return -EINVAL;
+			mutex_lock(&oled_mutex);
+			if(oled128x32_ptr->power_state == 1) {
+				Oled_UpdateRect(x1, y1, x2, y2, oled128x32_ptr->frame_buffer);
+				oled128x32_ptr->need_update = 0;
+			}
+			mutex_unlock(&oled_mutex);
+			break;
+		}
+		case OLED_FILLFB: {
+			if (copy_from_user(oled128x32_ptr->frame_buffer, (unsigned char*)arg, sizeof(unsigned char) * OLED_FRAMEBUFFER_LENGTH))
+				return -EFAULT;
+			oled128x32_ptr->need_update = 1;
+			break;
+		}
+		
+		default:{
+			OLED_LOG(" cmd = 0x%8X, not define\n" , cmd);
+			return -EINVAL;
 			break;
 		}
 	}
 
-	if (res == -EACCES)
-		OLED_LOG(" cmd = 0x%8X, invalid pointer\n", cmd);
-	else if (res < 0)
-		OLED_LOG(" cmd = 0x%8X, err = %ld\n", cmd, res);
-	return res;
+	return 0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -184,18 +239,9 @@ oled128x32_store_pin(struct device *dev, struct device_attribute *attr, const ch
 		u32 pin, level;
 		buf = buf + 2;
 		if((2 == sscanf(buf, "%d %d", &pin, &level)) && pin < 5) {
-			
-			{
-
-				int rt = down_interruptible(&oled128x32_ptr->driver_lock);
-				if (rt < 0) {
-					up(&oled128x32_ptr->driver_lock);
-					OLED_PRINT("Lock Error\n");
-					return count;
-				}
-			}
+			mutex_lock(&oled_mutex);
 			OledDriver_SetPin(pin, level);
-			up(&oled128x32_ptr->driver_lock);
+			mutex_unlock(&oled_mutex);
 		}
 	} else {
 		OLED_PRINT("-px 0|1   , x=0 CS; 1 RST ; 2 DC ; 3 SCLK; 4 SDIN , init result = 0x%08X\n" , oled128x32_init_status);
@@ -223,7 +269,7 @@ oled128x32_storeRaw(struct device *dev, struct device_attribute *attr, const cha
 {
 	
 	int ret = -EINVAL;
-	int rt = 0;
+
 	OLED_LOG("oled128x32 count=%d\n",count);
 	if( count <= 0) {
 		OLED_LOG("oled128x32 count error , ignore it\n");
@@ -243,11 +289,7 @@ oled128x32_storeRaw(struct device *dev, struct device_attribute *attr, const cha
 	memcpy(oled128x32_ptr->frame_buffer,bufRaw, count);
 	{
 		ret = 0; // debug
-		rt = down_interruptible(&oled128x32_ptr->driver_lock);
-		if (rt < 0) {
-			up(&oled128x32_ptr->driver_lock);
-			return count;
-		}
+		mutex_lock(&oled_mutex);
 		// do any op here
 		if(oled128x32_ptr->power_state == 1) {
 			Oled_UpdateAll((unsigned char *)oled128x32_ptr->frame_buffer);
@@ -256,7 +298,7 @@ oled128x32_storeRaw(struct device *dev, struct device_attribute *attr, const cha
 			oled128x32_ptr->need_update = 1;
 		}
 	
-		up(&oled128x32_ptr->driver_lock);
+		mutex_unlock(&oled_mutex);
 	}
 
 	if (ret < 0) {
@@ -298,11 +340,7 @@ oled128x32_storeRawRect(struct device *dev, struct device_attribute *attr, const
 	// TODO , update rect oled128x32_ptr->frame_buffer to oled
 	{
 
-		int rt = down_interruptible(&oled128x32_ptr->driver_lock);
-		if (rt < 0) {
-			up(&oled128x32_ptr->driver_lock);
-			return count;
-		}
+		mutex_lock(&oled_mutex);
 		// do any op here
 		if(oled128x32_ptr->power_state == 1) {
 			short x1,y1,x2,y2;
@@ -331,7 +369,7 @@ oled128x32_storeRawRect(struct device *dev, struct device_attribute *attr, const
 			oled128x32_ptr->need_update = 1;
 		}
 	
-		up(&oled128x32_ptr->driver_lock);
+		mutex_unlock(&oled_mutex);
 	}
 	return count;
 }
@@ -394,11 +432,7 @@ static ssize_t
 oled128x32_storePower(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
 {
 	unsigned char state;
-    int rt = down_interruptible(&oled128x32_ptr->driver_lock);
-    if (rt < 0) {
-		up(&oled128x32_ptr->driver_lock);
-		return count;
-    }
+    mutex_lock(&oled_mutex);
 	// do any op here
 	state = printHex2Number(buf[0]) == 0 ? 0 : 1;
 
@@ -416,7 +450,7 @@ oled128x32_storePower(struct device *dev, struct device_attribute *attr, const c
 		}
 	}
 	oled128x32_ptr->power_state = state;
-	up(&oled128x32_ptr->driver_lock);
+	mutex_unlock(&oled_mutex);
 	return count;
 
 }
@@ -429,11 +463,7 @@ static ssize_t
 oled128x32_storeBright(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
 {
 	unsigned char brightness = 0;
-    int rt = down_interruptible(&oled128x32_ptr->driver_lock);
-    if (rt < 0) {
-		up(&oled128x32_ptr->driver_lock);
-		return count;
-    }
+	mutex_lock(&oled_mutex);
 	// do any op here
 	brightness = printHex2Number(buf[0]);
 	brightness = brightness << 4;
@@ -441,7 +471,7 @@ oled128x32_storeBright(struct device *dev, struct device_attribute *attr, const 
 	Oled_Brightness(brightness);
 	oled128x32_ptr->brightness = brightness;
 	
-	up(&oled128x32_ptr->driver_lock);
+	mutex_unlock(&oled_mutex);
 
 	return count;
 
@@ -463,7 +493,7 @@ oled128x32_showBright(struct device *dev, struct device_attribute *attr, char *b
 	{
 	
 		int ret = -EINVAL;
-		int rt = 0;
+
 		OLED_LOG("oled128x32 storeSpi count=%d\n",count);
 		if( count <= 0) {
 			OLED_LOG("oled128x32 count error , ignore it\n");
@@ -478,15 +508,11 @@ oled128x32_showBright(struct device *dev, struct device_attribute *attr, char *b
 
 		{
 			ret = 0; // debug
-			rt = down_interruptible(&oled128x32_ptr->driver_lock);
-			if (rt < 0) {
-				up(&oled128x32_ptr->driver_lock);
-				return count;
-			}
+			mutex_lock(&oled_mutex);
 			// do any op here
 			oled_spi_write(bufRaw,count);
 	
-			up(&oled128x32_ptr->driver_lock);
+			mutex_unlock(&oled_mutex);
 		}
 
 		if (ret < 0) {
