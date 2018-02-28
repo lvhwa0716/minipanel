@@ -12,8 +12,6 @@
 #define OLED_BUFFER_GPIO "/sys/class/misc/oled128x32/oled_raw"
 #define OLED_BUFFER_SPI "/sys/class/spi_master/spi0/spi0.1/oled_raw"
 
-#define OLED_BUFFER OLED_BUFFER_GPIO
-
 void FrameBufferDump(unsigned char *bitmap, int w, int h, int bpl, int bpp)
 {
 	int  i, j;
@@ -56,19 +54,20 @@ int main( int argc, char**argv )
 	unsigned char frameCache[4096];
 	int size;
 	int fd = -1;
-	char * device = OLED_BUFFER;
-	if(argc == 2) {
-		device = argv[1];
-	}
-	fd = open(OLED_BUFFER, O_RDONLY);
+
+	fd = open(OLED_BUFFER_GPIO, O_RDONLY);
 	if(fd < 0){
-		fprintf ( stderr, "%s open failed \n" , device);
-		return -1;
+		fprintf ( stderr, "%s open failed,  try spi\n" , OLED_BUFFER_GPIO);
+		fd = open(OLED_BUFFER_SPI, O_RDONLY);
+		if(fd < 0){
+			fprintf ( stderr, "%s open failed , exist\n" , OLED_BUFFER_SPI);
+			return -1;
+		}
 	}
 	size = read(fd,frameCache, 4096);
 	fprintf ( stderr, "read size = %d \n\n\n" , size);
 	FrameBufferDump(frameCache, 128, 32, 128 / 8, 1);
 	fprintf ( stderr, "\n\n\n");
-
+	close(fd);
 	return 0;
 }
