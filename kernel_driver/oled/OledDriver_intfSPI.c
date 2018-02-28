@@ -9,7 +9,7 @@
 #include <linux/kthread.h>
 #include <mt_spi.h>
 #include <mt_spi_hal.h>
-
+#include <linux/miscdevice.h>
 
 #include <linux/gpio.h>
 #include "mt-plat/mt_gpio.h" // just op directly not use gpiolib, kkkk
@@ -307,11 +307,20 @@ static int oled128x32_remove(struct spi_device *spi)
 	return 0;
 }
 
+extern const struct file_operations oled128x32_fops;
+static struct miscdevice oled128x32_device = {
+	.minor = MISC_DYNAMIC_MINOR,
+	.name = "oled128x32",
+	.fops = &oled128x32_fops,
+};
+
 static int oled128x32_probe(struct spi_device *spi)
 {
 	struct mt_chip_conf *chip_config;
 
 	int err;
+	struct miscdevice *misc = &oled128x32_device;
+
 	spi_oled128x32 = spi;
 
 	#ifdef DIRECT_GPIO
@@ -376,6 +385,15 @@ static int oled128x32_probe(struct spi_device *spi)
 	chip_config->cs_pol = ACTIVE_LOW;
 
 	Oled_Init();
+
+	err = misc_register(misc);
+	if (err) {
+		OLED_LOG("register oled128x32\n");
+		return err;
+	}
+
+	oled128x32_ptr->misc = misc;
+
 	return oled128x32_create_attr(&spi->dev);
 	return 0;
 }

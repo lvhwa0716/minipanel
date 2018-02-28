@@ -32,7 +32,6 @@ int oled128x32_init_status = 0;
 extern void OledDriver_SetPin(int pin, int level);
 
 
-#ifdef USE_GPIO
 /*****************************************************************************/
 /* File operation                                                            */
 /*****************************************************************************/
@@ -155,7 +154,6 @@ const struct file_operations oled128x32_fops = {
 	.release = oled128x32_release,
 };
 
-#endif // USE_GPIO
 /*---------------------------------------------------------------------------*/
 static ssize_t
 oled128x32_store_pin(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
