@@ -31,80 +31,6 @@ int oled128x32_init_status = 0;
 
 extern void OledDriver_SetPin(int pin, int level);
 
-static void drv_bitblt(short dstx, short dsty, 
-		unsigned char* bmp, unsigned short bmp_w, unsigned short bmp_h, 
-		unsigned short bmp_pitch , int bmp_bpp)
-{
-	static const unsigned char notmask[8] = {
-		0x7f, 0xbf, 0xdf, 0xef, 0xf7, 0xfb, 0xfd, 0xfe};
-	int		i;
-	int srcx = 0;
-	int srcy = 0;
-	
-	int		dpitch = 128 / 8;
-	int		spitch = bmp_pitch;
-
-	int 	dst_w = 128;
-	int 	dst_h = 32;
-
-	int w = bmp_w;
-	int h = bmp_h;
-	unsigned char* dst;
-	unsigned char* src;
-
-	bmp_bpp = bmp_bpp; // not used , must set 1
-	// need clip
-	if(dstx < 0)
-	{
-		srcx = -dstx;
-		w = w + dstx;
-		dstx = 0;
-
-	}
-	if(dsty < 0)
-	{
-		srcy = -dsty;
-		h = h + dsty;
-		dsty = 0;
-	}
-
-	if( (dstx + w) > dst_w)
-	{
-		w = dst_w - dstx;
-	}
-
-	if( (dsty + h) > dst_h)
-	{
-		h = dst_h - dsty;
-	}
-
-	if((h <= 0) || (w <= 0))
-	{
-		return;
-	}
-
-	/* src is LSB 1bpp, dst is LSB 1bpp*/
-	dst = ((unsigned char*)oled128x32_ptr->frame_buffer) + (dstx>>3) + dsty * dpitch;
-	src = ((unsigned char*)bmp) + (srcx>>3) + srcy * spitch;
-
-
-	while(--h >= 0) {
-		unsigned char*	d = dst;
-		unsigned char*	s = src;
-		int	dx = dstx;
-		int	sx = srcx;
-
-		for(i=0; i<w; ++i) {
-			*d = (*d & notmask[dx&7]) | ((*s >> (7 - (sx&7)) & 0x01) << (7 - (dx&7)));
-			if((++dx & 7) == 0)
-				++d;
-			if((++sx & 7) == 0)
-				++s;
-		}
-		dst += dpitch;
-		src += spitch;
-	}
-}
 
 #ifdef USE_GPIO
 /*****************************************************************************/
@@ -311,68 +237,6 @@ out:
 	return ret;
 }
 
-static ssize_t
-oled128x32_storeRawRect(struct device *dev, struct device_attribute *attr, const char *bufRaw, size_t count)
-{
-	struct oled128x32_rectUpdate *pRect = (struct oled128x32_rectUpdate *)bufRaw;
-	if(count < oled128x32_rectUpdate_headSize) 
-	{
-		OLED_PRINT("buffer to small%d\n",count);
-		return -EINVAL;
-	}
-
-	OLED_LOG("RawRect x=%u,y=%u,w=%u,h=%u,bpl=%u,size=%u\n",pRect->x,pRect->y,pRect->w,pRect->h,pRect->bpl,pRect->size);
-
-	if( (pRect->size + oled128x32_rectUpdate_headSize) != count) 
-	{
-		OLED_PRINT("buffer size error \n");
-		return -EINVAL;
-	}
-	
-	if( pRect->size != (pRect->bpl * pRect->h)) 
-	{
-		OLED_PRINT("buffer size error : size != (bpl * h)\n");
-		return -EINVAL;
-	}
-
-	// TODO , bitblt rect to oled128x32_ptr->frame_buffer
-	drv_bitblt(pRect->x, pRect->y, pRect->frame_buffer, pRect->w, pRect->h, pRect->bpl , 1);
-	// TODO , update rect oled128x32_ptr->frame_buffer to oled
-	{
-
-		mutex_lock(&oled_mutex);
-		// do any op here
-		if(oled128x32_ptr->power_state == 1) {
-			short x1,y1,x2,y2;
-			x1 = pRect->x;
-			y1 = pRect->y;
-
-			x2 = pRect->x + (short)pRect->w;
-			y2 = pRect->y + (short)pRect->h;
-			if(pRect->x < 0)
-			{
-				x1 = 0;
-			}
-			if(pRect->y < 0)
-			{
-				y1 = 0;
-			}
-
-
-			if((x2 > 0) && (y2 > 0))
-			{
-				Oled_UpdateRect(x1,y1,x2,y2,(unsigned char *)oled128x32_ptr->frame_buffer);
-				oled128x32_ptr->need_update = 0;
-			}
-			
-		} else {
-			oled128x32_ptr->need_update = 1;
-		}
-	
-		mutex_unlock(&oled_mutex);
-	}
-	return count;
-}
 static ssize_t oled128x32_showString(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	int i = 0;
@@ -535,7 +399,6 @@ oled128x32_showBright(struct device *dev, struct device_attribute *attr, char *b
 static DEVICE_ATTR(pin,      0200, NULL,   oled128x32_store_pin);
 static DEVICE_ATTR(oled_str, 0600, oled128x32_showString, oled128x32_storeString);
 static DEVICE_ATTR(oled_raw, 0600, oled128x32_showRaw, oled128x32_storeRaw);
-static DEVICE_ATTR(oled_rawrect, 0200, NULL, oled128x32_storeRawRect);
 static DEVICE_ATTR(oled_power, 0644, oled128x32_showPower, oled128x32_storePower);
 static DEVICE_ATTR(oled_bright, 0644, oled128x32_showBright, oled128x32_storeBright);
 #ifdef USE_SPI
@@ -547,7 +410,6 @@ static struct device_attribute *oled128x32_attr_list[] = {
 	&dev_attr_pin,
 	&dev_attr_oled_str,
 	&dev_attr_oled_raw,
-	&dev_attr_oled_rawrect,
 	&dev_attr_oled_power,
 	&dev_attr_oled_bright,
 #ifdef USE_SPI
