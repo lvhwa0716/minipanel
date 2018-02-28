@@ -64,6 +64,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         btn.setOnClickListener(this);
         btn= (Button)findViewById(R.id.buttonSetBrightness);
         btn.setOnClickListener(this);
+        btn= (Button)findViewById(R.id.buttonBltBit);
+        btn.setOnClickListener(this);
 
 
 
@@ -95,7 +97,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     microPanelService.Sleep(Integer.parseInt(p1.getText().toString()));
                     break;
                 case R.id.buttonClearAll:
-                    microPanelService.Brightness(Integer.parseInt(p1.getText().toString()));
+                    microPanelService.ClearAll();
                     break;
 
                 case R.id.buttonDrawPixel:
@@ -180,6 +182,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 case R.id.buttonSetBrightness:
                     microPanelService.Brightness(Integer.parseInt(p1.getText().toString()));
                     break;
+                case R.id.buttonBltBit:
+                    microPanelService.DrawBitmap(
+                            Integer.parseInt(p1.getText().toString()), // dest x
+                            Integer.parseInt(p1.getText().toString()), // dest y
+                            30, // bmp width
+                            30, //bmp height
+                            4,  // bytes per line
+                            1, // must 1 , only support white/black
+                            test1_rawdata
+                    );
+                    break;
                 default:
                     Toast.makeText(this, "ID=" + arg0.getId() + "not done", Toast.LENGTH_LONG).show();
                     break;
@@ -190,4 +203,37 @@ public class MainActivity extends Activity implements View.OnClickListener {
             e.printStackTrace();
         }
     }
+
+    static final byte[] test1_rawdata = {
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x03,  (byte)0xC0,  (byte)0xFC,  (byte)0x00,
+            (byte)0x07,  (byte)0xC1,  (byte)0xFE,  (byte)0x00,
+            (byte)0x04,  (byte)0xC1,  (byte)0x07,  (byte)0x00,
+            (byte)0x00,  (byte)0xC0,  (byte)0x03,  (byte)0x00,
+            (byte)0x00,  (byte)0xC0,  (byte)0x06,  (byte)0x00,
+            (byte)0x00,  (byte)0xC0,  (byte)0x7C,  (byte)0x00,
+            (byte)0x00,  (byte)0xC0,  (byte)0x7E,  (byte)0x00,
+            (byte)0x00,  (byte)0xC0,  (byte)0x07,  (byte)0x00,
+            (byte)0x00,  (byte)0xC0,  (byte)0x03,  (byte)0x00,
+            (byte)0x00,  (byte)0xC0,  (byte)0x03,  (byte)0x00,
+            (byte)0x00,  (byte)0xC1,  (byte)0x07,  (byte)0x00,
+            (byte)0x07,  (byte)0xF9,  (byte)0xFE,  (byte)0x00,
+            (byte)0x07,  (byte)0xF8,  (byte)0xF8,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+            (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
+    };
 }
