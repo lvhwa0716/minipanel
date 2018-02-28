@@ -53,7 +53,7 @@ static int oled128x32_open(struct inode *inode, struct file *file)
 /*---------------------------------------------------------------------------*/
 static int oled128x32_release(struct inode *inode, struct file *file)
 {
-	struct oled128x32_obj_t *obj = oled128x32_ptr;
+	struct oled128x32_obj_t *obj = file->private_data;
 
 	if (obj == NULL) {
 		OLED_LOG("NULL pointer");
@@ -67,7 +67,10 @@ static int oled128x32_release(struct inode *inode, struct file *file)
 /*---------------------------------------------------------------------------*/
 static long oled128x32_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
+	struct oled128x32_obj_t *obj = file->private_data;
+
 	OLED_LOG("cmd = %08X" , cmd);
+	
 	switch (cmd) {
 		case OLED_SLEEP:
 		case OLED_WAKEUP: {
@@ -85,11 +88,11 @@ static long oled128x32_ioctl(struct file *file, unsigned int cmd, unsigned long 
 				Oled_WakeUp();
 				if(oled128x32_ptr->need_update == 1)
 				{
-					Oled_UpdateAll((unsigned char *)oled128x32_ptr->frame_buffer);
-					oled128x32_ptr->need_update = 0;
+					Oled_UpdateAll((unsigned char *)obj->frame_buffer);
+					obj->need_update = 0;
 				}
 			}
-			oled128x32_ptr->power_state = state;
+			obj->power_state = state;
 			mutex_unlock(&oled_mutex);
 			break;
 		}
@@ -100,7 +103,7 @@ static long oled128x32_ioctl(struct file *file, unsigned int cmd, unsigned long 
 			mutex_lock(&oled_mutex);
 			// do any op here
 			Oled_Brightness((unsigned char)(brightness & 0xFF));
-			oled128x32_ptr->brightness = brightness;
+			obj->brightness = brightness;
 
 			mutex_unlock(&oled_mutex);
 			break;
@@ -119,17 +122,17 @@ static long oled128x32_ioctl(struct file *file, unsigned int cmd, unsigned long 
 			if( (x2 > 127) || (y2 > 31))
 				return -EINVAL;
 			mutex_lock(&oled_mutex);
-			if(oled128x32_ptr->power_state == 1) {
-				Oled_UpdateRect(x1, y1, x2, y2, oled128x32_ptr->frame_buffer);
-				oled128x32_ptr->need_update = 0;
+			if(obj->power_state == 1) {
+				Oled_UpdateRect(x1, y1, x2, y2, obj->frame_buffer);
+				obj->need_update = 0;
 			}
 			mutex_unlock(&oled_mutex);
 			break;
 		}
 		case OLED_FILLFB: {
-			if (copy_from_user(oled128x32_ptr->frame_buffer, (unsigned char*)arg, sizeof(unsigned char) * OLED_FRAMEBUFFER_LENGTH))
+			if (copy_from_user(obj->frame_buffer, (unsigned char*)arg, sizeof(unsigned char) * OLED_FRAMEBUFFER_LENGTH))
 				return -EFAULT;
-			oled128x32_ptr->need_update = 1;
+			obj->need_update = 1;
 			break;
 		}
 		
@@ -142,6 +145,40 @@ static long oled128x32_ioctl(struct file *file, unsigned int cmd, unsigned long 
 
 	return 0;
 }
+static ssize_t oled128x32_read (struct file * file, char __user * buf, size_t count,
+			loff_t * ppos)
+{
+	struct oled128x32_obj_t *obj = file->private_data;
+
+	if (count == 0)
+		return 0;
+	if(count > sizeof(unsigned char) * OLED_FRAMEBUFFER_LENGTH)
+		count = sizeof(unsigned char) * OLED_FRAMEBUFFER_LENGTH;
+
+	if (copy_to_user (buf, obj->frame_buffer, count))
+	{
+		return -EFAULT;
+	}
+	return count;
+}
+
+static ssize_t oled128x32_write (struct file * file, const char __user * buf,
+			 size_t count, loff_t * ppos)
+{
+	struct oled128x32_obj_t *obj = file->private_data;
+
+	if (count == 0)
+		return 0;
+
+	if(count > sizeof(unsigned char) * OLED_FRAMEBUFFER_LENGTH)
+		count = sizeof(unsigned char) * OLED_FRAMEBUFFER_LENGTH;
+
+	if (copy_from_user (obj->frame_buffer, buf, count))
+	{
+		return -EFAULT;
+	}
+	return count;
+}
 
 /*---------------------------------------------------------------------------*/
 const struct file_operations oled128x32_fops = {
@@ -152,6 +189,9 @@ const struct file_operations oled128x32_fops = {
 #endif
 	.open = oled128x32_open,
 	.release = oled128x32_release,
+	.llseek		= no_llseek,
+	.read		= oled128x32_read,
+	.write		= oled128x32_write,
 };
 
 /*---------------------------------------------------------------------------*/
