@@ -67,7 +67,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         btn= (Button)findViewById(R.id.buttonBltBit);
         btn.setOnClickListener(this);
 
-
+        btn= (Button)findViewById(R.id.buttonFontSize);
+        btn.setOnClickListener(this);
 
         String[] services = MicroPanelService.listService();
         if(services != null) {
@@ -191,6 +192,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
                             4,  // bytes per line
                             1, // must 1 , only support white/black
                             test1_rawdata
+                    );
+                    break;
+                case R.id.buttonFontSize:
+                    microPanelService.FontSize(
+                            Integer.parseInt(p1.getText().toString()),
+                            Integer.parseInt(p2.getText().toString())
                     );
                     break;
                 default:

@@ -39,6 +39,7 @@ namespace android {
 		MICROPANEL_LINE			= IBinder::FIRST_CALL_TRANSACTION + 12,
 		MICROPANEL_RECT			= IBinder::FIRST_CALL_TRANSACTION + 13,
 		MICROPANEL_FILLRECT		= IBinder::FIRST_CALL_TRANSACTION + 14,
+		MICROPANEL_FONTSIZE		= IBinder::FIRST_CALL_TRANSACTION + 15,
 
 	};
 	
@@ -264,6 +265,17 @@ namespace android {
 					DBG_ERR("UpdateScreen could not contact remote\n");
 				}
 			}
+			void FontSize(int w, int h)
+			{
+				Parcel data, reply;
+				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
+				data.writeInt32(w);
+				data.writeInt32(h);
+				if (remote()->transact(MICROPANEL_FONTSIZE, data, &reply) != NO_ERROR) {
+					DBG_ERR("FontSize could not contact remote\n");
+				}
+			}
+
 	};
 	
 	IMPLEMENT_META_INTERFACE(MicroPanelService, "com.i029.minipanel.IMicroPanelService");
@@ -430,6 +442,14 @@ namespace android {
 					return NO_ERROR;  
 				}
 				break;
+			case MICROPANEL_FONTSIZE : {
+					CHECK_INTERFACE(IMicroPanelService, data, reply);
+					int w = data.readInt32();
+					int h = data.readInt32();
+					FontSize( w,  h);
+					return NO_ERROR;  
+				}
+				break;
 			default:
 				return BBinder::onTransact(code,data,reply,flags);  
 		}  
@@ -508,6 +528,10 @@ namespace android {
 	void MicroPanelService::UpdateScreen(int x, int y, int w, int h)
 	{
 		mpGui_UpdateScreen( x,  y,  w,  h);
+	}
+	void MicroPanelService::FontSize(int w, int h)
+	{
+		mpGui_FontSize( w,  h);
 	}
 
 }

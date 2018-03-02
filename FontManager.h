@@ -33,6 +33,7 @@ void FontManager_DrawString(char* text, int x, int y);
 void FontManager_ClearBitmap(void);
 void FontManager_DeInit(void);
 void FontManager_Show(void); 
+void FontManager_FontSize(int width, int height); 
 
 void FontManager_ShowCallback_Sample(unsigned char *bitmap, int w, int h, int bpl, int bpp);
 #endif // __FONTMANAGER_H__

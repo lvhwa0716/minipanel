@@ -402,6 +402,11 @@ void mpGui_UpdateScreen(int x, int y, int w, int h)
 		//mpGui_Print2Console(); // debug
 	#endif
 }
+
+void mpGui_FontSize(int width, int height)
+{
+	FontManager_FontSize(width, height);
+}
 static void mpGui_Print2Console(void) {
 	int  i, j;
 

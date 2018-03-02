@@ -18,7 +18,7 @@ interface IMicroPanelService {
 	void Line(int x1, int y1, int x2, int y2);
 	void Rect(int x, int y, int w, int h);
 	void FillRect(int x, int y, int w, int h);
-	
+	void FontSize(int w, int h);
 	// add more here
 	
 }

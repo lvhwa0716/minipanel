@@ -398,5 +398,21 @@ void FontManager_ShowCallback_Sample(unsigned char *bitmap, int w, int h, int bp
 		}
 	}
 }
+void FontManager_FontSize(int width, int height)
+{
+	int error;
+	int i;
+	gFontManager.fontWidth = width;
+	gFontManager.fontHeight = height;
 
+	for( i = 0; i < gFontSize ; i++)
+	{
+		
+		error = FT_Set_Pixel_Sizes(gFontManager.faces[i], gFontManager.fontWidth, gFontManager.fontHeight);
+		if(error != 0)
+		{
+			DBG_ERR( "Change FontSize error w=%d, h=%d", width, height);
+		}
+	}
+}
 

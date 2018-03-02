@@ -82,7 +82,7 @@ void mpGui_VLine(int x, int y1, int y2); // y1 < y2
 void mpGui_Line(int x1, int y1, int x2, int y2);
 void mpGui_DrawString(int x, int y, char *String /* only UTF8 */);
 void mpGui_DrawBitmap(int x, int y, unsigned char* bmp, int bmp_w, int bmp_h, int bmp_pitch , int bmp_bpp);
-
+void mpGui_FontSize(int width, int height); 
 
 void mpGui_Init(void);
 void mpGui_DeInit(void);

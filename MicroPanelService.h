@@ -44,6 +44,7 @@ namespace android {
 			virtual void Wakeup(void) = 0;
 			virtual void Brightness(int b) = 0;
 			virtual void UpdateScreen(int x, int y, int w, int h) = 0;
+			virtual void FontSize(int w, int h) = 0;
     };
 
 	class BnMicroPanelService: public BnInterface<IMicroPanelService> {
@@ -89,6 +90,7 @@ namespace android {
 		void Wakeup(void);
 		void Brightness(int b);
 		void UpdateScreen(int x, int y, int w, int h);
+		void FontSize(int w, int h);
 	}; // class Module
 
 }  
