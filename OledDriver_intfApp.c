@@ -52,9 +52,6 @@ extern void Oled_UpdateRect(unsigned short x1, unsigned short y1, unsigned short
 	//-px 0|1   , x=0 RST ; 1 DC ; 2 CS; 3 SCLK; 4 SDIN
 	#define PIN_CTRL "/sys/class/misc/oled128x32/pin"
 
-	// RAW DATA , RECT
-	#define OLED_BUFFER_RECT "/sys/class/misc/oled128x32/oled_rawrect"
-
 	// RAW DATA , must full screen
 	#define OLED_BUFFER "/sys/class/misc/oled128x32/oled_raw"
 
@@ -72,9 +69,6 @@ extern void Oled_UpdateRect(unsigned short x1, unsigned short y1, unsigned short
 
 	#define SPI_RAW "/sys/class/spi_master/spi0/spi0.1/spi_raw"
 	#define SPI_CFG "/sys/class/spi_master/spi0/spi0.1/spi_cfg"
-
-	// RAW DATA , RECT
-	#define OLED_BUFFER_RECT "/sys/class/spi_master/spi0/spi0.1/oled_rawrect"
 
 	// RAW DATA , must full screen
 	#define OLED_BUFFER "/sys/class/spi_master/spi0/spi0.1/oled_raw"
