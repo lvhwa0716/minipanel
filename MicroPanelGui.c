@@ -3,6 +3,7 @@
 
 #include "FontManager.h"
 #include "MicroPanelGui.h"
+#include "MicroPanelLogo.h"
 
 #include <stdio.h>
 
@@ -343,6 +344,10 @@ void mpGui_Init(void)
 	FontManager_Init(MICROPANEL_WIDTH, MICROPANEL_HEIGHT, 1, gMicroPanel.bpl, gMicroPanel.buffer,FontManager_ShowCallback_Sample);
 
 	OledDriver_intfApp_Init();
+
+	// Draw Logo
+	mpGui_DrawBitmap(0, 0, (unsigned char*)IMG_logo.pData, IMG_logo.width, IMG_logo.height, IMG_logo.bpl , 1);
+	mpGui_UpdateScreen(0,0,MICROPANEL_WIDTH, MICROPANEL_HEIGHT);
 }
 
 void mpGui_DeInit(void)
@@ -370,7 +375,7 @@ void mpGui_Brightness(int b)
 }
 void mpGui_UpdateScreen(int x, int y, int w, int h)
 {
-	
+
 	if( x < 0 ) {
 		w = x + w;
 		x = 0;
@@ -381,20 +386,16 @@ void mpGui_UpdateScreen(int x, int y, int w, int h)
 	}
 
 	if( (w + x) >= MICROPANEL_WIDTH ) {
-		w = x + w - MICROPANEL_WIDTH + 1;
-		return;
+		w = MICROPANEL_WIDTH - x - 1;
 	}
 
 	if( (h + y) >= MICROPANEL_HEIGHT ) {
-		h = y + h - MICROPANEL_HEIGHT + 1;
-		return;
+		h = MICROPANEL_HEIGHT - y - 1;
 	}
 
 	if( ( w <= 0 ) || (h <= 0) ) {
 		return;
 	}
-
-
 
 	OledDriver_intfApp_Update(gMicroPanel.buffer, x, y, w, h);
 	#if defined(DEBUG_LOG)

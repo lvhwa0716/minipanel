@@ -60,6 +60,17 @@ struct MicroPanel_Struct {
 
 	unsigned char *buffer;
 };
+
+struct __ImageStruct__ {
+	int width;
+	int height;
+	int bpl;
+	const unsigned char *pData;
+};
+
+#ifndef byte
+	#define byte unsigned char
+#endif
 void mpGui_Rect(int x, int y, int w, int h);
 void mpGui_FillRect(int x, int y, int w, int h);
 void mpGui_ClearAll();
