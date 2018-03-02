@@ -14,7 +14,7 @@ def DumpBitmap(fileName) :
         return
     varname = os.path.splitext(os.path.basename(fileName))[0]
 
-    print("static const unsigned char %s_rawdata[] = [" % (varname))
+    print("static const unsigned char %s_rawdata[] = {" % (varname))
     for y in xrange(h):
         pixel=0
         print("\t" ,  end='' )
@@ -30,7 +30,7 @@ def DumpBitmap(fileName) :
             pixel = pixel << ( 7 - (w & 0x7))
             print(" (byte)0x%02X, " % (pixel & 0xFF) ,  end='' )
         print("")
-    print("];\n")
+    print("};")
 
     print("const struct __ImageStruct__ IMG_%s = { %d,%d,%d, %s_rawdata};" % (varname,w, h , (w + 7) >> 3, varname))
 
