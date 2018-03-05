@@ -2,14 +2,12 @@ package com.i029.minipanel.minipaneltest;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.i029.minipanel.IMicroPanelService;
 import com.i029.minipanel.MicroPanelService;
 
 public class MainActivity extends Activity implements View.OnClickListener {
@@ -19,7 +17,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     static final int width = 127;
     static final int height = 31;
 
-    private IMicroPanelService microPanelService;
+    private MicroPanelService microPanelService;
     private EditText p1;
     private EditText p2;
     private EditText p3;
@@ -76,7 +74,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 Log.e(TAG, s);
             }
         }
-        microPanelService = MicroPanelService.getMicroPanelService();
+        microPanelService = MicroPanelService.getInstance();
 
         if (microPanelService == null) {
             Log.e(TAG, "MicroPanelService service is not initialized!");
