@@ -27,6 +27,8 @@ src_files := FontManager.c MicroPanelGui.c MicroPanelService.cpp
 src_files += OledDriver_intfApp.c OledDriver_2832TSWUG01.c
 
 local_define := -DDEBUG_LOG
+local_debug_static_lib := libcurl_i029
+local_debug_shared_lib :=  libcrypto libssl libz
 
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES:= $(src_files)
@@ -39,7 +41,7 @@ LOCAL_C_INCLUDES += \
 
 LOCAL_CFLAGS += $(local_define)
 
-LOCAL_SHARED_LIBRARIES := \
+LOCAL_SHARED_LIBRARIES += \
     libharfbuzz_ng \
     libft2 \
     liblog \
@@ -47,6 +49,12 @@ LOCAL_SHARED_LIBRARIES := \
     libz \
     libicuuc \
     libutils
+
+
+#debug post framebuffer to server
+LOCAL_STATIC_LIBRARIES += $(local_debug_static_lib)
+LOCAL_C_INCLUDES += vendor/i029/display/curl/include
+
 
 include $(BUILD_STATIC_LIBRARY)
 
@@ -77,6 +85,9 @@ LOCAL_SHARED_LIBRARIES := \
 LOCAL_STATIC_LIBRARIES := libminipanel
 #LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := minipanelservice
+
+LOCAL_STATIC_LIBRARIES += $(local_debug_static_lib)
+LOCAL_SHARED_LIBRARIES += $(local_debug_shared_lib)
 
 include $(BUILD_EXECUTABLE)
 
@@ -118,7 +129,8 @@ LOCAL_SHARED_LIBRARIES := \
 LOCAL_STATIC_LIBRARIES := libminipanel
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := minipaneltest
-
+LOCAL_STATIC_LIBRARIES += $(local_debug_static_lib)
+LOCAL_SHARED_LIBRARIES += $(local_debug_shared_lib)
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
