@@ -6,9 +6,12 @@ import numpy as np
 from PIL import Image
 from PIL import ImageDraw
 
+from graphics import *
+
 import urllib
 from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import SocketServer
+
 
 
 #2|root@Pixi4-4:/data/data # ./curl -T t.txt http://localhost:9234
@@ -18,7 +21,8 @@ import SocketServer
 
 global_draw = None
 global_image = None
-global_lastShow = None
+
+global_win = None
 
 def createImage():
     array = np.ndarray((HEIGHT, WIDTH, 3), np.uint8)
@@ -46,10 +50,29 @@ def fillImage(draw, data):
             draw.point((w, h), fill)
     return
 
+def updateWin(win, data):
+    if win is None:
+        return
+    if len(data) != (PITCH * HEIGHT) :
+        print "Error length :", len(data)
+        return
+    raw_bytes = bytearray(data)
+    for h in xrange(HEIGHT):
+        for w in xrange(WIDTH):
+            pixel = raw_bytes[h * PITCH + (w >> 3)]
+            color = "black"
+            if (pixel >> (7-(w & 7))) & 0x01:
+                color = "white"
+            win.plotPixel(w, h, color)
+    return
+
+
 def updateImage(data):
-    global global_lastShow
-    fillImage(global_draw, data)
-    global_image.show()
+    global global_win, global_draw
+    #fillImage(global_draw, data)
+    #global_image.show()
+    # graphics
+    updateWin(global_win,data)
     #print data
 
 class ReceiveFrameBufferHandler(BaseHTTPRequestHandler):
@@ -77,7 +100,8 @@ if __name__=="__main__":
     PORT = 9234
     if len(sys.argv) > 1 :
         PORT = sys.argv[1]
-    global_image = createImage()
-    global_draw = ImageDraw.Draw(global_image)
+    #global_image = createImage()
+    #global_draw = ImageDraw.Draw(global_image)
+    global_win = GraphWin('OLED', WIDTH, HEIGHT);
 
     setHttpServer(PORT)
