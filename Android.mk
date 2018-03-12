@@ -19,7 +19,7 @@
 
 LOCAL_PATH:= $(call my-dir)
 
-src_files := FontManager.c MicroPanelGui.c MicroPanelService.cpp
+src_files := FontManager.c MicroPanelGui.c MicroPanelService.cpp MicroPanelHttpDebug.cpp
 
 #must modify OledDriver_intfApp.c following hardware
 #define DRIVER_HW_MODE	DRIVER_MODE_GPIO

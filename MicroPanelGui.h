@@ -33,6 +33,8 @@
 		#define DBG_LOG(fmt,arg...) fprintf ( stdout, fmt, ##arg)
 		#define DBG_ERR(fmt,arg...) fprintf ( stderr, fmt, ##arg)
 	#endif
+	// must undefine it when release
+	#define HTTP_DEBUG_PORT	9234
 #else
 	#define DBG_LOG(fmt,arg...)
 	#ifdef ANDROID

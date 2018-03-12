@@ -7,13 +7,6 @@
 
 #include <stdio.h>
 
-// must undefine it when release
-#define HTTP_DEBUG_PORT	9234
-
-#if defined(HTTP_DEBUG_PORT)
-	#include <curl/curl.h>
-#endif
-
 static struct MicroPanel_Struct gMicroPanel;
 
 static const unsigned char notmask[8] = {
@@ -25,6 +18,15 @@ static const unsigned char notmask[8] = {
 
 #if defined(DEBUG_LOG)
 	static void mpGui_Print2Console();
+	#if defined(HTTP_DEBUG_PORT)
+		extern void httpDebug_Init();
+		extern void httpDebug_DeInit();
+		extern void httpDebug_PushAll(unsigned char * p , int size);
+	#else
+		#define httpDebug_Init()
+		#define httpDebug_DeInit()
+		#define httpDebug_PushAll(p, s)
+	#endif
 #endif
 
 void mpGui_FillRect(int x, int y, int w, int h)
@@ -342,9 +344,7 @@ extern void OledDriver_intfApp_Update(unsigned char *pBuf, int x, int y, int w, 
 void mpGui_Init(void)
 {
 
-	#if defined(HTTP_DEBUG_PORT)
-		curl_global_init(CURL_GLOBAL_ALL);  
-	#endif
+	httpDebug_Init();
 	// Software init
 	gMicroPanel.width = MICROPANEL_WIDTH;
 	gMicroPanel.height = MICROPANEL_HEIGHT;
@@ -372,9 +372,7 @@ void mpGui_DeInit(void)
 	free(gMicroPanel.buffer);
 	OledDriver_intfApp_DeInit();
 
-	#if defined(HTTP_DEBUG_PORT)
-		curl_global_cleanup();
-	#endif
+	httpDebug_DeInit();
 }
 
 void mpGui_Sleep(int level)
@@ -417,7 +415,12 @@ void mpGui_UpdateScreen(int x, int y, int w, int h)
 
 	OledDriver_intfApp_Update(gMicroPanel.buffer, x, y, w, h);
 	#if defined(DEBUG_LOG)
-		mpGui_Print2Console(); // debug
+			#if defined(HTTP_DEBUG_PORT)
+				// post to host 
+				httpDebug_PushAll(gMicroPanel.buffer , gMicroPanel.bpl * gMicroPanel.height * sizeof(unsigned char));
+			#else
+				mpGui_Print2Console(); // debug
+			#endif
 	#endif
 }
 
@@ -425,72 +428,10 @@ void mpGui_FontSize(int width, int height)
 {
 	FontManager_FontSize(width, height);
 }
-#if defined(HTTP_DEBUG_PORT)
-	struct _update_context_ {
-		unsigned char *data;
-		int size;
-		int pos;
 
-	} g_upload_ctx;
-
-	static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream)  
-	{  
-		struct _update_context_ *ctx = (struct _update_context_ *) stream;  
-		size_t len = 0;
-
-		if (ctx->pos >= ctx->size) {
-			return 0;
-		}
-
-		if ((size == 0) || (nmemb == 0) || ((size*nmemb) < 1)) {
-			return 0;
-		}
-
-		len = ctx->size - ctx->pos;
-		if (len > size*nmemb) {
-			len = size * nmemb;
-		}
-
-		memcpy(ptr, ctx->data + ctx->pos, len);
-		ctx->pos += len;
-		DBG_LOG("send len=%d", len);
-		return len;
-	}  
-#endif
 
 static void mpGui_Print2Console(void) {
-	#if defined(HTTP_DEBUG_PORT)
-		// post to host 
-		CURL *curl = curl_easy_init();
-		CURLcode res;
-		
-		if (curl) {
-			char url[255];
-			sprintf(url, "http://localhost:%d", HTTP_DEBUG_PORT);
-			DBG_LOG("server : %s" , url);
 
-			g_upload_ctx.data = gMicroPanel.buffer;
-			g_upload_ctx.pos = 0;
-			g_upload_ctx.size = gMicroPanel.bpl * gMicroPanel.height * sizeof(unsigned char);
-
-			curl_easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
-			curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
-			curl_easy_setopt(curl, CURLOPT_PUT, 1L);
-			curl_easy_setopt(curl, CURLOPT_URL, url);
-			curl_easy_setopt(curl, CURLOPT_READDATA, &g_upload_ctx);
-			curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE,(curl_off_t)(g_upload_ctx.size));
-
-			//curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-			curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-
-			res = curl_easy_perform(curl);
-			if (res != CURLE_OK)
-				DBG_ERR( "curl_easy_perform() failed: %s\n",  curl_easy_strerror(res));
-
-			curl_easy_cleanup(curl);
-		}
-	#else
-		
 		int  i, j;
 
 		unsigned char *image = gMicroPanel.buffer;
@@ -508,5 +449,4 @@ static void mpGui_Print2Console(void) {
 			putchar( '\n' );
 		}
 
-	#endif
 }
