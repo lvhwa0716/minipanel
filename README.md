@@ -62,3 +62,12 @@
 		b. getprop | grep init.svc  查看启动状态
 		c. dmesg , logcat
 
+# 5. 工具
+	OledDumpServer.py :
+		Http Put Server, 将硬件显示的Frame Buffer显示在PC上, 默认端口9234 (也可用于其他图形模拟显示, 速度较慢)
+		Android设备 需要设置 adb reverse tcp:9234 tcp:9234
+		
+	DumpBmp.py :
+		将图片转化为单色的C语言数组
+
+
