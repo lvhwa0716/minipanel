@@ -53,28 +53,33 @@ void FrameBufferDump(unsigned char *bitmap, int w, int h, int bpl, int bpp)
 
 int main( int argc, char**argv )
 {
-	unsigned char frameCache[4096];
+	unsigned char frameCache[8192];
 	int size;
 	int fd = -1;
 
-	
+	argc = argc;
+	argv =  argv;
 
 	fd = open(OLED_DEVICE, O_RDONLY);
 	if(fd < 0){
 		fprintf ( stderr, "%s open failed,  try gpio attr\n" , OLED_DEVICE);
-		fd = open(OLED_BUFFER_GPIO, O_RDONLY);
-		if(fd < 0){
-			fprintf ( stderr, "%s open failed,  try spi attr\n" , OLED_BUFFER_GPIO);
-			fd = open(OLED_BUFFER_SPI, O_RDONLY);
+		#if (MICROPANEL_BPP == 1)
+			fd = open(OLED_BUFFER_GPIO, O_RDONLY);
 			if(fd < 0){
-				fprintf ( stderr, "%s open failed , exist\n" , OLED_BUFFER_SPI);
-				return -1;
+				fprintf ( stderr, "%s open failed,  try spi attr\n" , OLED_BUFFER_GPIO);
+				fd = open(OLED_BUFFER_SPI, O_RDONLY);
+				if(fd < 0){
+					fprintf ( stderr, "%s open failed , exist\n" , OLED_BUFFER_SPI);
+					return -1;
+				}
 			}
-		}
+		#else
+			return -1;
+		#endif
 	}
-	size = read(fd,frameCache, 4096);
+	size = read(fd,frameCache, sizeof(frameCache));
 	fprintf ( stderr, "read size = %d \n\n\n" , size);
-	FrameBufferDump(frameCache, 128, 32, 128 / 8, 1);
+	FrameBufferDump(frameCache, 128, 32, 128 / 8 * MICROPANEL_BPP, MICROPANEL_BPP);
 	fprintf ( stderr, "\n\n\n");
 	close(fd);
 	return 0;

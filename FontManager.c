@@ -260,7 +260,7 @@ static void FontManager_FillBitmap( FT_Bitmap*  bitmap, FT_Int x, FT_Int y)
 			{
 				if ( i < 0 || j < 0 || i >= gFontManager.width || j >= gFontManager.height )
 					continue;
-					image[BPL * j + i] |= bitmap->buffer[q * bitmap->pitch + p];
+				image[BPL * j + i] |= bitmap->buffer[q * bitmap->pitch + p];
 			}
 		}
 	}

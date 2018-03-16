@@ -26,7 +26,10 @@ src_files := FontManager.c MicroPanelGui.c MicroPanelService.cpp MicroPanelHttpD
 #define DRIVER_SW_MODE	DRIVER_MODE_APP
 src_files += OledDriver_intfApp.c OledDriver_2832TSWUG01.c
 
-local_define := -DDEBUG_LOG
+local_define := -DMICROPANEL_BPP=1
+
+local_define += -DDEBUG_LOG
+
 local_debug_static_lib := libcurl_i029
 local_debug_shared_lib :=  libcrypto libssl libz
 

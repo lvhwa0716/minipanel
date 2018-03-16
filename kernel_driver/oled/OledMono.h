@@ -21,7 +21,7 @@
 
 #include <linux/types.h>
 
-#define OLED_FRAMEBUFFER_LENGTH (128 * 32 / 8)	// 128 x 32 , white/black
+#define OLED_FRAMEBUFFER_LENGTH (MICROPANEL_BPP * (128 * 32 / 8))	// 128 x 32 , white/black
 
 struct oled128x32_obj_t {
 	atomic_t ref;

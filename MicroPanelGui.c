@@ -74,16 +74,28 @@ static inline int mpGui_ClipArea(int x1, int y1, int x2, int y2)
 
 void mpGui_SetColor(int color)
 {
-	gMicroPanel.color = color;
+	#if (MICROPANEL_BPP == 1)
+		gMicroPanel.color = color == 0 ? 0 : 1;
+	#elif (MICROPANEL_BPP == 8)
+		gMicroPanel.color = color == 0 ? 0 : 255;
+	#endif
 }
 
 static inline void mpGui_DrawPixelNoCheck(int x, int y, int c)
 {
-	unsigned char *addr = gMicroPanel.buffer + y * gMicroPanel.bpl + (x >> 3);
-	if(gMicroPanel.opMode == MWROP_XOR)
-		*addr ^= c << (7-(x&7));
-	else
-		*addr = (*addr & notmask[x&7]) | (c << (7-(x&7)));
+	#if (MICROPANEL_BPP == 1)
+		unsigned char *addr = gMicroPanel.buffer + y * gMicroPanel.bpl + (x >> 3);
+		if(gMicroPanel.opMode == MWROP_XOR)
+			*addr ^= c << (7-(x&7));
+		else
+			*addr = (*addr & notmask[x&7]) | (c << (7-(x&7)));
+	#elif (MICROPANEL_BPP == 8)
+		unsigned char *addr = gMicroPanel.buffer + y * gMicroPanel.bpl + x;
+		if(gMicroPanel.opMode == MWROP_XOR)
+			*addr ^= c;
+		else
+			*addr = c;
+	#endif
 }
 void mpGui_DrawPixel(int x, int y, int c)
 {
@@ -98,18 +110,22 @@ void mpGui_DrawPixel(int x, int y, int c)
 
 int mpGui_ReadPixel(int x, int y)
 {
-	unsigned char *addr = gMicroPanel.buffer + y * gMicroPanel.bpl + (x >> 3);
+	#if (MICROPANEL_BPP == 1)
+		unsigned char *addr = gMicroPanel.buffer + y * gMicroPanel.bpl + (x >> 3);
 
-	if(mpGui_ClipPoint(x, y) == 0)
-		return 0;
+		if(mpGui_ClipPoint(x, y) == 0)
+			return 0;
 
-	return ( *addr >> (7-(x&7)) ) & 0x01;
-
+		return ( *addr >> (7-(x&7)) ) & 0x01;
+	#elif (MICROPANEL_BPP == 8)
+		unsigned char *addr = gMicroPanel.buffer + y * gMicroPanel.bpl + x;
+		return	(*addr);
+	#endif
 }
 
 void mpGui_HLine(int x1, int x2, int y)
 {
-	unsigned char *addr = gMicroPanel.buffer + y * gMicroPanel.bpl + (x1 >> 3);
+	
 	unsigned char c = (unsigned char)gMicroPanel.color;
 
 	if( ( y < 0 ) || ( y >= gMicroPanel.height ) ) return;
@@ -119,26 +135,48 @@ void mpGui_HLine(int x1, int x2, int y)
 	if(x1 < 0) x1 = 0;
 
 	DBG_LOG( "%d, %d, %d, %d\n", x1, x2,y, gMicroPanel.bpl );
+	#if (MICROPANEL_BPP == 1)
+	{
+		unsigned char *addr = gMicroPanel.buffer + y * gMicroPanel.bpl + (x1 >> 3);
 
-	if(gMicroPanel.opMode == MWROP_XOR) {
-		while(x1 <= x2) {
-			*addr ^= c << (7-(x1&7));
-			if((++x1 & 7) == 0)
-				++addr;
-		}
-	} else {
-		while(x1 <= x2) {
-			*addr = (*addr & notmask[x1&7]) | (c << (7-(x1&7)));
-			if((++x1 & 7) == 0)
-				++addr;
+		if(gMicroPanel.opMode == MWROP_XOR) {
+			while(x1 <= x2) {
+				*addr ^= c << (7-(x1&7));
+				if((++x1 & 7) == 0)
+					++addr;
+			}
+		} else {
+			while(x1 <= x2) {
+				*addr = (*addr & notmask[x1&7]) | (c << (7-(x1&7)));
+				if((++x1 & 7) == 0)
+					++addr;
+			}
 		}
 	}
+	#elif (MICROPANEL_BPP == 8)
+	{
+		unsigned char *addr = gMicroPanel.buffer + y * gMicroPanel.bpl + x1;
+		if(gMicroPanel.opMode == MWROP_XOR) {
+			while(x1 <= x2) {
+				*addr ^= c;
+				++addr;
+				x1++;
+			}
+		} else {
+			while(x1 <= x2) {
+				*addr = c;
+				++addr;
+				x1++;
+			}
+		}
+	}
+	#endif
 }
 
 void mpGui_VLine(int x, int y1, int y2)
 {
 	int	pitch = gMicroPanel.bpl;
-	unsigned char *addr = gMicroPanel.buffer + y1 * pitch + (x >> 3);
+	
 	unsigned char c = (unsigned char)gMicroPanel.color;
 	if(( x < 0) || (x >= gMicroPanel.width))
 		return ;
@@ -146,17 +184,35 @@ void mpGui_VLine(int x, int y1, int y2)
 	if(y2 < 0) return;
 	if(y2 >= gMicroPanel.height) y2 = gMicroPanel.height - 1;
 	if(y1 < 0) y1 = 0;
-
-	if(gMicroPanel.opMode == MWROP_XOR)
-		while(y1++ <= y2) {
-			*addr ^= c << (7-(x&7));
-			addr += pitch;
-		}
-	else
-		while(y1++ <= y2) {
-			*addr = (*addr & notmask[x&7]) | (c << (7-(x&7)));
-			addr += pitch;
-		}
+	#if (MICROPANEL_BPP == 1)
+	{
+		unsigned char *addr = gMicroPanel.buffer + y1 * pitch + (x >> 3);
+		if(gMicroPanel.opMode == MWROP_XOR)
+			while(y1++ <= y2) {
+				*addr ^= c << (7-(x&7));
+				addr += pitch;
+			}
+		else
+			while(y1++ <= y2) {
+				*addr = (*addr & notmask[x&7]) | (c << (7-(x&7)));
+				addr += pitch;
+			}
+	}
+	#elif (MICROPANEL_BPP == 8)
+	{
+		unsigned char *addr = gMicroPanel.buffer + y1 * pitch + (x);
+		if(gMicroPanel.opMode == MWROP_XOR)
+			while(y1++ <= y2) {
+				*addr ^= c;
+				addr += pitch;
+			}
+		else
+			while(y1++ <= y2) {
+				*addr = c;
+				addr += pitch;
+			}
+	}
+	#endif
 }
 void mpGui_Line(int x1, int y1, int x2, int y2)
 {
@@ -310,28 +366,50 @@ void mpGui_DrawBitmap(int dstx, int dsty, unsigned char* bmp, int bmp_w, int bmp
 	{
 		return;
 	}
+	#if (MICROPANEL_BPP == 1)
+		/* src is LSB 1bpp, dst is LSB 1bpp*/
+		unsigned char* dst = ((unsigned char*)dstpsd->buffer) + (dstx>>3) + dsty * dpitch;
+		unsigned char* src = ((unsigned char*)bmp) + (srcx>>3) + srcy * spitch;
 
-	/* src is LSB 1bpp, dst is LSB 1bpp*/
-	unsigned char* dst = ((unsigned char*)dstpsd->buffer) + (dstx>>3) + dsty * dpitch;
-	unsigned char* src = ((unsigned char*)bmp) + (srcx>>3) + srcy * spitch;
 
+		while(--h >= 0) {
+			unsigned char*	d = dst;
+			unsigned char*	s = src;
+			int	dx = dstx;
+			int	sx = srcx;
 
-	while(--h >= 0) {
-		unsigned char*	d = dst;
-		unsigned char*	s = src;
-		int	dx = dstx;
-		int	sx = srcx;
-
-		for(i=0; i<w; ++i) {
-			*d = (*d & notmask[dx&7]) | ((*s >> (7 - (sx&7)) & 0x01) << (7 - (dx&7)));
-			if((++dx & 7) == 0)
-				++d;
-			if((++sx & 7) == 0)
-				++s;
+			for(i=0; i<w; ++i) {
+				*d = (*d & notmask[dx&7]) | ((*s >> (7 - (sx&7)) & 0x01) << (7 - (dx&7)));
+				if((++dx & 7) == 0)
+					++d;
+				if((++sx & 7) == 0)
+					++s;
+			}
+			dst += dpitch;
+			src += spitch;
 		}
-		dst += dpitch;
-		src += spitch;
-	}
+	#elif (MICROPANEL_BPP == 8)
+		/* src is LSB 1bpp, dst is LSB 8bpp*/
+		unsigned char* dst = ((unsigned char*)dstpsd->buffer) + (dstx) + dsty * dpitch;
+		unsigned char* src = ((unsigned char*)bmp) + (srcx>>3) + srcy * spitch;
+
+
+		while(--h >= 0) {
+			unsigned char*	d = dst;
+			unsigned char*	s = src;
+			int	dx = dstx;
+			int	sx = srcx;
+
+			for(i=0; i<w; ++i) {
+				*d = (*s >> (7 - (sx&7)) & 0x01) == 0 ? 0 : 0xFF;
+				++d;
+				if((++sx & 7) == 0)
+					++s;
+			}
+			dst += dpitch;
+			src += spitch;
+		}
+	#endif
 }
 
 extern void OledDriver_intfApp_Init(void);
@@ -349,13 +427,19 @@ void mpGui_Init(void)
 	gMicroPanel.width = MICROPANEL_WIDTH;
 	gMicroPanel.height = MICROPANEL_HEIGHT;
 	gMicroPanel.bpp = MICROPANEL_BPP;
-	gMicroPanel.bpl = (MICROPANEL_WIDTH + 7) / 8;
+	#if (MICROPANEL_BPP == 1)
+		gMicroPanel.bpl = (MICROPANEL_WIDTH + 7) / 8;
+	#elif (MICROPANEL_BPP == 8)
+		gMicroPanel.bpl = MICROPANEL_WIDTH;
+	#endif
 	gMicroPanel.power_status = MICROPANEL_POWER_OFF;
 	gMicroPanel.buffer = (unsigned char*)calloc(gMicroPanel.bpl * gMicroPanel.height, sizeof(unsigned char));
 	gMicroPanel.opMode = MWROP_COPY;
+	gMicroPanel.color = 0;
 
 	// init FontManager
-	FontManager_Init(MICROPANEL_WIDTH, MICROPANEL_HEIGHT, 1, gMicroPanel.bpl, gMicroPanel.buffer,FontManager_ShowCallback_Sample);
+	//FontManager_Init(MICROPANEL_WIDTH, MICROPANEL_HEIGHT, MICROPANEL_BPP, gMicroPanel.bpl, gMicroPanel.buffer,FontManager_ShowCallback_Sample);
+	FontManager_Init(MICROPANEL_WIDTH, MICROPANEL_HEIGHT, MICROPANEL_BPP, gMicroPanel.bpl, gMicroPanel.buffer,NULL);
 
 	OledDriver_intfApp_Init();
 
@@ -430,23 +514,33 @@ void mpGui_FontSize(int width, int height)
 }
 
 
-static void mpGui_Print2Console(void) {
+static void mpGui_Print2Console(void)
+{
 
-		int  i, j;
+	int  i, j;
 
-		unsigned char *image = gMicroPanel.buffer;
-
-		if(gMicroPanel.bpp == 1)
+	unsigned char *image = gMicroPanel.buffer;
+	#if (MICROPANEL_BPP == 1)
+		for ( i = 0; i < gMicroPanel.height; i++ )
 		{
-			for ( i = 0; i < gMicroPanel.height; i++ )
-			{
-				for ( j = 0; j < gMicroPanel.width; j++ ) {
-					unsigned char *addr = image + i * gMicroPanel.bpl + (j >> 3);
-					putchar( ( *addr >> (7-(j&7)) ) & 0x01 ? '*' : ' ');
-				}
-				putchar( '\n' );
+			for ( j = 0; j < gMicroPanel.width; j++ ) {
+				unsigned char *addr = image + i * gMicroPanel.bpl + (j >> 3);
+				putchar( ( *addr >> (7-(j&7)) ) & 0x01 ? '*' : ' ');
 			}
 			putchar( '\n' );
 		}
+		putchar( '\n' );
+
+	#elif (MICROPANEL_BPP == 8)
+		for ( i = 0; i < gMicroPanel.height; i++ )
+		{
+			for ( j = 0; j < gMicroPanel.width; j++ ) {
+				unsigned char *addr = image + i * gMicroPanel.bpl + j;
+				putchar( ( *addr) & 0x80 ? '*' : ' ');
+			}
+			putchar( '\n' );
+		}
+		putchar( '\n' );
+	#endif
 
 }

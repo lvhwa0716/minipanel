@@ -213,6 +213,7 @@ oled128x32_store_pin(struct device *dev, struct device_attribute *attr, const ch
 
 	return count;
 }
+
 static inline unsigned char printHex2Number(unsigned char p) 
 {
 	if( (p>='0') && (p <= '9') )
@@ -221,115 +222,118 @@ static inline unsigned char printHex2Number(unsigned char p)
 	return (unsigned char)(p - 'A' + 10);
 }
 
-static ssize_t oled128x32_showRaw(struct device *dev, struct device_attribute *attr, char *buf)
-{
+#if (MICROPANEL_BPP == 1)
 
-	memcpy(buf,oled128x32_ptr->frame_buffer,OLED_FRAMEBUFFER_LENGTH);
-	return OLED_FRAMEBUFFER_LENGTH;
-}
-
-static ssize_t
-oled128x32_storeRaw(struct device *dev, struct device_attribute *attr, const char *bufRaw, size_t count)
-{
-	
-	int ret = -EINVAL;
-
-	OLED_LOG("oled128x32 count=%d\n",count);
-	if( count <= 0) {
-		OLED_LOG("oled128x32 count error , ignore it\n");
-		return ret;
-	}
-
-	if( count > OLED_FRAMEBUFFER_LENGTH) {
-		OLED_LOG("oled128x32 count too large , ignore it\n");
-		return ret;
-	}
-
-	if (unlikely(!bufRaw)) {
-		OLED_LOG("oled128x32 buf is invalid\n");
-		goto out;
-	}
-	// copy to framebuffer
-	memcpy(oled128x32_ptr->frame_buffer,bufRaw, count);
+	static ssize_t oled128x32_showRaw(struct device *dev, struct device_attribute *attr, char *buf)
 	{
-		ret = 0; // debug
-		mutex_lock(&oled_mutex);
-		// do any op here
-		if(oled128x32_ptr->power_state == 1) {
-			Oled_UpdateAll((unsigned char *)oled128x32_ptr->frame_buffer);
-			oled128x32_ptr->need_update = 0;
+
+		memcpy(buf,oled128x32_ptr->frame_buffer,OLED_FRAMEBUFFER_LENGTH);
+		return OLED_FRAMEBUFFER_LENGTH;
+	}
+
+	static ssize_t
+	oled128x32_storeRaw(struct device *dev, struct device_attribute *attr, const char *bufRaw, size_t count)
+	{
+	
+		int ret = -EINVAL;
+
+		OLED_LOG("oled128x32 count=%d\n",count);
+		if( count <= 0) {
+			OLED_LOG("oled128x32 count error , ignore it\n");
+			return ret;
+		}
+
+		if( count > OLED_FRAMEBUFFER_LENGTH) {
+			OLED_LOG("oled128x32 count too large , ignore it\n");
+			return ret;
+		}
+
+		if (unlikely(!bufRaw)) {
+			OLED_LOG("oled128x32 buf is invalid\n");
+			goto out;
+		}
+		// copy to framebuffer
+		memcpy(oled128x32_ptr->frame_buffer,bufRaw, count);
+		{
+			ret = 0; // debug
+			mutex_lock(&oled_mutex);
+			// do any op here
+			if(oled128x32_ptr->power_state == 1) {
+				Oled_UpdateAll((unsigned char *)oled128x32_ptr->frame_buffer);
+				oled128x32_ptr->need_update = 0;
+			} else {
+				oled128x32_ptr->need_update = 1;
+			}
+	
+			mutex_unlock(&oled_mutex);
+		}
+
+		if (ret < 0) {
+			OLED_LOG("oled128x32 Message transfer err:%d\n", ret);
 		} else {
-			oled128x32_ptr->need_update = 1;
+			ret = count;
+		}
+
+	out:
+		return ret;
+	}
+
+	static ssize_t oled128x32_showString(struct device *dev, struct device_attribute *attr, char *buf)
+	{
+		int i = 0;
+		unsigned char *p = (unsigned char*)oled128x32_ptr->frame_buffer;
+		static const unsigned char *toHex = "0123456789ABCDEF";
+		for(i = 0 ; i < OLED_FRAMEBUFFER_LENGTH; i++)
+		{
+			*buf = toHex[((*p) >> 4) & 0xF];
+			buf++;
+			*buf = toHex[(*p) & 0xF];
+			buf++;
+
+			p++;
+		}
+		*buf=0;
+		return (OLED_FRAMEBUFFER_LENGTH*2 + 1);
+	}
+	static ssize_t
+	oled128x32_storeString(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+	{
+		unsigned char *pTx;
+		unsigned char *bufRaw;
+		int i = 0;
+		int ret = 0;
+		size_t len = count >> 1;
+	
+		if(len == 0) {
+			OLED_LOG("oled128x32 count=%d , ignore it\n",count);
+			return count;
+		}
+
+		bufRaw = kmalloc(len, GFP_KERNEL);
+		if (bufRaw == NULL)
+			return -ENOMEM;
+
+		pTx = bufRaw;
+		while(i < (len << 1) ) {
+			unsigned char data = 0;
+			data = printHex2Number((unsigned char)buf[i]);
+			data = data << 4;
+			i++;
+			data = data | printHex2Number((unsigned char)buf[i]);
+			i++;
+			*pTx = data;
+			pTx++;
+		}
+		ret = oled128x32_storeRaw(dev, attr, (const char *)bufRaw, len);
+		kfree(bufRaw);
+		if(ret > 0) {
+			return count;
+		} else {
+			return ret;
 		}
 	
-		mutex_unlock(&oled_mutex);
 	}
-
-	if (ret < 0) {
-		OLED_LOG("oled128x32 Message transfer err:%d\n", ret);
-	} else {
-		ret = count;
-	}
-
-out:
-	return ret;
-}
-
-static ssize_t oled128x32_showString(struct device *dev, struct device_attribute *attr, char *buf)
-{
-	int i = 0;
-	unsigned char *p = (unsigned char*)oled128x32_ptr->frame_buffer;
-	static const unsigned char *toHex = "0123456789ABCDEF";
-	for(i = 0 ; i < OLED_FRAMEBUFFER_LENGTH; i++)
-	{
-		*buf = toHex[((*p) >> 4) & 0xF];
-		buf++;
-		*buf = toHex[(*p) & 0xF];
-		buf++;
-
-		p++;
-	}
-	*buf=0;
-	return (OLED_FRAMEBUFFER_LENGTH*2 + 1);
-}
-static ssize_t
-oled128x32_storeString(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
-{
-	unsigned char *pTx;
-	unsigned char *bufRaw;
-	int i = 0;
-	int ret = 0;
-	size_t len = count >> 1;
-	
-	if(len == 0) {
-		OLED_LOG("oled128x32 count=%d , ignore it\n",count);
-		return count;
-	}
-
-	bufRaw = kmalloc(len, GFP_KERNEL);
-	if (bufRaw == NULL)
-		return -ENOMEM;
-
-	pTx = bufRaw;
-	while(i < (len << 1) ) {
-		unsigned char data = 0;
-		data = printHex2Number((unsigned char)buf[i]);
-		data = data << 4;
-		i++;
-		data = data | printHex2Number((unsigned char)buf[i]);
-		i++;
-		*pTx = data;
-		pTx++;
-	}
-	ret = oled128x32_storeRaw(dev, attr, (const char *)bufRaw, len);
-	kfree(bufRaw);
-	if(ret > 0) {
-		return count;
-	} else {
-		return ret;
-	}
-	
-}
+#endif // #if (MICROPANEL_BPP == 1)
 static ssize_t
 oled128x32_storePower(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
 {
@@ -435,8 +439,11 @@ oled128x32_showBright(struct device *dev, struct device_attribute *attr, char *b
 	}
 #endif
 static DEVICE_ATTR(pin,      0200, NULL,   oled128x32_store_pin);
-static DEVICE_ATTR(oled_str, 0600, oled128x32_showString, oled128x32_storeString);
-static DEVICE_ATTR(oled_raw, 0600, oled128x32_showRaw, oled128x32_storeRaw);
+
+#if (MICROPANEL_BPP == 1)
+	static DEVICE_ATTR(oled_str, 0600, oled128x32_showString, oled128x32_storeString);
+	static DEVICE_ATTR(oled_raw, 0600, oled128x32_showRaw, oled128x32_storeRaw);
+#endif
 static DEVICE_ATTR(oled_power, 0644, oled128x32_showPower, oled128x32_storePower);
 static DEVICE_ATTR(oled_bright, 0644, oled128x32_showBright, oled128x32_storeBright);
 #ifdef USE_SPI
@@ -446,8 +453,10 @@ static DEVICE_ATTR(oled_bright, 0644, oled128x32_showBright, oled128x32_storeBri
 /*---------------------------------------------------------------------------*/
 static struct device_attribute *oled128x32_attr_list[] = {
 	&dev_attr_pin,
+#if (MICROPANEL_BPP == 1)
 	&dev_attr_oled_str,
 	&dev_attr_oled_raw,
+#endif
 	&dev_attr_oled_power,
 	&dev_attr_oled_bright,
 #ifdef USE_SPI

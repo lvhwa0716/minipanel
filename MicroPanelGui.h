@@ -8,7 +8,10 @@
 
 #define MICROPANEL_WIDTH	128
 #define MICROPANEL_HEIGHT	32
-#define MICROPANEL_BPP		1	// only support BPP = 1
+
+#if !defined(MICROPANEL_BPP)
+	#define MICROPANEL_BPP		1	// only support BPP = 1
+#endif
 
 #define WHITE				1
 #define BLACK				0

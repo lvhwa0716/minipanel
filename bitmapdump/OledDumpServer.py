@@ -34,36 +34,56 @@ def createImage():
 
 
 def fillImage(draw, data):
+    global PITCH
     if draw is None:
         return
-    if len(data) != (PITCH * HEIGHT) :
-        print "Error length :", len(data)
-        return
     raw_bytes = bytearray(data)
-    for h in xrange(HEIGHT):
-        for w in xrange(WIDTH):
-            pixel = raw_bytes[h * PITCH + (w >> 3)]
-            #fill = (255, 255, 0)
-            fill = (0, 0, 0)
-            if (pixel >> (7-(w & 7))) & 0x01:
-                fill = (255, 255, 255)
-            draw.point((w, h), fill)
+    if len(data) == (PITCH * HEIGHT) :
+        for h in xrange(HEIGHT):
+            for w in xrange(WIDTH):
+                pixel = raw_bytes[h * PITCH + (w >> 3)]
+                fill = (0, 0, 0)
+                if (pixel >> (7-(w & 7))) & 0x01:
+                    fill = (255, 255, 255)
+                draw.point((w, h), fill)
+        return
+    elif len(data) == (PITCH * HEIGHT * 8) :
+        local_PITCH = PITCH * 8
+        for h in xrange(HEIGHT):
+            for w in xrange(WIDTH):
+                pixel = raw_bytes[h * local_PITCH + (w)]
+                fill = (0, 0, 0)
+                if (pixel & 0x80) != 0:
+                    fill = (255, 255, 255)
+                draw.point((w, h), fill)
+    else :
+        print "Error length :", len(data)
     return
 
 def updateWin(win, data):
     if win is None:
         return
-    if len(data) != (PITCH * HEIGHT) :
+    raw_bytes = bytearray(data)
+    if len(data) == (PITCH * HEIGHT) :
+        for h in xrange(HEIGHT):
+            for w in xrange(WIDTH):
+                pixel = raw_bytes[h * PITCH + (w >> 3)]
+                color = "black"
+                if (pixel >> (7-(w & 7))) & 0x01:
+                    color = "white"
+                win.plotPixel(w, h, color)
+    elif len(data) == (PITCH * HEIGHT * 8):
+        local_PITCH = PITCH * 8
+        for h in xrange(HEIGHT):
+            for w in xrange(WIDTH):
+                pixel = raw_bytes[h * local_PITCH + (w)]
+                color = "black"
+                if (pixel & 0x80) != 0:
+                    color = "white"
+                win.plotPixel(w, h, color)
+    else:
         print "Error length :", len(data)
         return
-    raw_bytes = bytearray(data)
-    for h in xrange(HEIGHT):
-        for w in xrange(WIDTH):
-            pixel = raw_bytes[h * PITCH + (w >> 3)]
-            color = "black"
-            if (pixel >> (7-(w & 7))) & 0x01:
-                color = "white"
-            win.plotPixel(w, h, color)
     return
 
 

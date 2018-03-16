@@ -369,7 +369,7 @@ void OledDriver_intfApp_Update(unsigned char *pBuf, int x, int y, int w, int h)
 			DBG_ERR("OLED_BUFFER not open");
 			return ;
 		}
-		write(fd_OLED_BUFFER, pBuf, 128 * 32 / 8);
+		write(fd_OLED_BUFFER, pBuf, (128 * 32 / 8 ) * MICROPANEL_BPP);
 	#else
 		Oled_UpdateRect(x, y, x+w, y+h, pBuf);
 	#endif
