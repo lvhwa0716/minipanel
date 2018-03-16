@@ -70,4 +70,20 @@
 	DumpBmp.py :
 		将图片转化为单色的C语言数组
 
+# 6. config
+	Android.mk : 
+		must define 
+			local_define := -DMICROPANEL_BPP=8
+			or
+			local_define := -DMICROPANEL_BPP=1
+		
+		must remove when release : local_define += -DDEBUG_LOG
+	Makefile :
+		must define same as Android.mk
+			subdir-ccflags-y += -DMICROPANEL_BPP=8
+			or
+			subdir-ccflags-y += -DMICROPANEL_BPP=1
+		 must define 
+			USE_GPIO or USE_SPI following hardware
+			
 
