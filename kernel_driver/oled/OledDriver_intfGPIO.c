@@ -24,21 +24,6 @@
 #include "OledMono.h"
 
 
-#define GPIO_LCD_CS_MODE		GPIO_MODE_00
-#define	GPIO_LCD_RST_MODE		GPIO_MODE_00
-#define	GPIO_LCD_DC_MODE		GPIO_MODE_00
-#define	GPIO_LCD_SCLK_MODE		GPIO_MODE_00
-#define	GPIO_LCD_SDIN_MODE		GPIO_MODE_00
-
-
-extern const int GPIO_LCD_CS_IDX;
-extern const int GPIO_LCD_RST_IDX;
-extern const int GPIO_LCD_DC_IDX;
-extern const int GPIO_LCD_SCLK_IDX;
-extern const int GPIO_LCD_SDIN_IDX;
-extern const unsigned int OLEDDRIVER_PIN_INDEX[];
-extern const int LOW_LEVEL;
-extern const int HIGH_LEVEL;
 extern void Oled_Init(void);
 extern void Oled_DeInit(void);
 
@@ -55,31 +40,6 @@ static void drv_udelay(int usec)
 }
 
 
-void OledDriver_SetPin(int pin, int level)
-{
-	if(oled128x32_init_status != 0) {
-		OLED_LOG("PIN_INDEX = %d, level = %d , status=0x%08X\n", OLEDDRIVER_PIN_INDEX[pin], (level == 0 ? 0 : 1),oled128x32_init_status);
-		return ;
-	}
-	//OLED_LOG("PIN_INDEX = %d, level = %d\n", OLEDDRIVER_PIN_INDEX[pin], (level == 0 ? 0 : 1));
-	if( (pin < 0 ) || (pin > GPIO_LCD_SDIN_IDX) ) {
-		return ; // error
-	}
-	#ifdef DIRECT_GPIO
-		if( level == 0) {
-			mt_set_gpio_out(OLEDDRIVER_PIN_INDEX[pin], GPIO_OUT_ZERO);
-		} else {
-			mt_set_gpio_out(OLEDDRIVER_PIN_INDEX[pin], GPIO_OUT_ONE);
-		}
-	#else
-		if( level == 0) {
-			gpio_set_value(OLEDDRIVER_PIN_INDEX[pin], 0);
-		} else {
-			gpio_set_value(OLEDDRIVER_PIN_INDEX[pin], 1);
-		}
-	#endif
-
-}
 void Reset_Command(void)
 {
 	OledDriver_SetPin(GPIO_LCD_RST_IDX , LOW_LEVEL); //RES=0;
@@ -178,14 +138,15 @@ static int oled128x32_probe(struct platform_device *dev)
 		} else {
 			gpio_direction_output(OLEDDRIVER_PIN_INDEX[GPIO_LCD_CS_IDX], 1);
 		}
-
-		err = gpio_request(OLEDDRIVER_PIN_INDEX[GPIO_LCD_RST_IDX], "GPIO_OLED_RST");
-		if(err < 0) {
-			OLED_PRINT( " GPIO_OLED_RST error = %d ", err);
-			oled128x32_init_status = oled128x32_init_status | 0x02;
-		} else {
-			gpio_direction_output(OLEDDRIVER_PIN_INDEX[GPIO_LCD_RST_IDX], 0);
-		}
+		#if !defined(USE_LCM_RST)
+			err = gpio_request(OLEDDRIVER_PIN_INDEX[GPIO_LCD_RST_IDX], "GPIO_OLED_RST");
+			if(err < 0) {
+				OLED_PRINT( " GPIO_OLED_RST error = %d ", err);
+				oled128x32_init_status = oled128x32_init_status | 0x02;
+			} else {
+				gpio_direction_output(OLEDDRIVER_PIN_INDEX[GPIO_LCD_RST_IDX], 0);
+			}
+		#endif
 
 		err = gpio_request(OLEDDRIVER_PIN_INDEX[GPIO_LCD_DC_IDX], "GPIO_OLED_DC");
 		if(err < 0) {

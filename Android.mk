@@ -26,7 +26,7 @@ src_files := FontManager.c MicroPanelGui.c MicroPanelService.cpp MicroPanelHttpD
 #define DRIVER_SW_MODE	DRIVER_MODE_APP
 src_files += OledDriver_intfApp.c OledDriver_2832TSWUG01.c
 
-local_define := -DMICROPANEL_BPP=1
+local_define := -DMICROPANEL_BPP=8
 
 local_define += -DDEBUG_LOG
 
@@ -160,7 +160,7 @@ BOARD_SEPOLICY_DIRS += vendor/i029/display/minipanel/sepolicy_minipanel
 PRODUCT_COPY_FILES += vendor/i029/display/minipanel/init.minipanel.rc:root/init.minipanel.rc
 PRODUCT_PACKAGES += minipanelservice
 
-
+ADDITIONAL_DEFAULT_PROPERTIES += persist.sys.usb.config=adb
 
 
 

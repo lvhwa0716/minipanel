@@ -53,7 +53,8 @@ struct oled128x32_rectUpdate {
 
 #define OLED_PRINT(fmt, args...) pr_err("[oled128x32]: [%s]:[%d]" fmt, __func__, __LINE__, ##args)
 
-//#define DIRECT_GPIO // GPIO19 HARDCODE warning!!! mt_gpio_affix.c
+//#define DIRECT_GPIO // GPIO19 HARDCODE warning!!! mt_gpio_affix.c , must modify for LCM_RST
+//#define USE_LCM_RST
 
 #if (1)
 	#define OLED_LOG(fmt, args...) pr_err("[oled128x32]: [%s]:[%d]" fmt, __func__, __LINE__, ##args)
