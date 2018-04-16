@@ -1,0 +1,61 @@
+
+1. BlueTooth(A2DP Sink , HFP Client)
+	BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR
+	A2DP sink , 需要写APK
+
+	http://www.it1352.com/88728.html
+
+	1). include/bt_target.h
+
+		/* Enable bluetooth av sink. */
+		#define BTA_AV_SINK_INCLUDED TRUE
+
+
+	2). /packages/apps/Bluetooth/res/values/config.xml
+
+		<!-- Enable sink support. -->
+		<bool name="profile_supported_a2dp_sink">true</bool>
+
+	3). 可能无声
+		Audio Route需要修改
+
+	HFP Client , 需要写APK
+
+	1). include/bt_target.h
+
+		#define BTA_HH_ROLE BTA_SLAVE_ROLE_ONLY
+
+
+	2). /packages/apps/Bluetooth/res/values/config.xml
+
+		<bool name="profile_supported_hs_hfp">false</bool>
+		<bool name="profile_supported_hfpclient">true</bool>
+
+	3). 可能无声
+		Audio Route需要修改
+	
+	Demo : device/lge/hammerhead/
+		bdroid_buildcfg.h
+			#ifndef _BDROID_BUILDCFG_H
+			#define _BDROID_BUILDCFG_H
+
+				#define BTA_DISABLE_DELAY 100 /* in milliseconds */
+
+				#define BTM_WBS_INCLUDED TRUE
+				#define BTIF_HF_WBS_PREFERRED TRUE
+
+				/* Handsfree device */
+				#define BTA_DM_COD {0x20, 0x04, 0x08}
+
+				/* Enable A2DP sink */
+				#define BTA_AV_SINK_INCLUDED TRUE
+
+			#endif
+
+	 override : packages/apps/Bluetooth/res/values/config.xml
+
+			<resources>
+				<bool name="profile_supported_a2dp_sink">true</bool>
+				<bool name="profile_supported_avrcp_controller">true</bool>
+				<bool name="profile_supported_hfpclient">true</bool>
+			</resources>
