@@ -86,4 +86,99 @@
 		 must define 
 			USE_GPIO or USE_SPI following hardware
 			
+# 7. adb默认打开
+		UsbDeviceManager.java : 默认开启 adb
+
+			public void systemReady() {
+				if (DEBUG) Slog.d(TAG, "systemReady");
+
+				mNotificationManager = (NotificationManager)
+				        mContext.getSystemService(Context.NOTIFICATION_SERVICE);
+
+				// We do not show the USB notification if the primary volume supports mass storage.
+				// The legacy mass storage UI will be used instead.
+				boolean massStorageSupported = false;
+				final StorageManager storageManager = StorageManager.from(mContext);
+				final StorageVolume primary = storageManager.getPrimaryVolume();
+				massStorageSupported = primary != null && primary.allowMassStorage();
+				mUseUsbNotification = !massStorageSupported;
+
+				// make sure the ADB_ENABLED setting value matches the current state
+				try {
+					Slog.d(TAG, "lvh systemReady: " + mAdbEnabled);
+					mAdbEnabled = true;
+				    Settings.Global.putInt(mContentResolver,
+				            Settings.Global.ADB_ENABLED, mAdbEnabled ? 1 : 0);
+			
+				} catch (SecurityException e) {
+				    // If UserManager.DISALLOW_DEBUGGING_FEATURES is on, that this setting can't be changed.
+				    Slog.d(TAG, "ADB_ENABLED is restricted.");
+				}
+				mHandler.sendEmptyMessage(MSG_SYSTEM_READY);
+			}
+
+			private String getDefaultFunctions() {
+			    String func = SystemProperties.get(USB_PERSISTENT_CONFIG_PROPERTY,
+			            UsbManager.USB_FUNCTION_NONE);
+			    if (UsbManager.USB_FUNCTION_NONE.equals(func)) {
+			        func = UsbManager.USB_FUNCTION_MTP;
+					// lvh@@@
+					func = func + "," + UsbManager.USB_FUNCTION_ADB;
+			    }
+				Slog.d(TAG, "lvh@tcl getDefaultFunctions : " + func);
+			    return func;
+			}
+
+
+
+		USB 调试授权
+
+			UsbDebuggingActivity.java
+
+		ADDITIONAL_DEFAULT_PROPERTIES += persist.sys.usb.config=adb
+
+# 8. 权限自动允许
+		厂商通常会自己实现PackageInstaller, 需要使用默认的包UI: GrantPermissionsActivity.java
+		DevicePolicyManagerService.java
+			public DevicePolicyData(int userHandle) {
+		        mUserHandle = userHandle;
+				//{{lvh@@@
+				mPermissionPolicy = DevicePolicyManager.PERMISSION_POLICY_AUTO_GRANT; 
+				//}}
+		    }
+
+			 private void clearUserPoliciesLocked(UserHandle userHandle) {
+					int userId = userHandle.getIdentifier();
+					// Reset some of the user-specific policies
+					DevicePolicyData policy = getUserData(userId);
+					//{{lvh@@@
+					policy.mPermissionPolicy = DevicePolicyManager.PERMISSION_POLICY_AUTO_GRANT;// DevicePolicyManager.PERMISSION_POLICY_PROMPT;
+					//}}
+					policy.mDelegatedCertInstallerPackage = null;
+					policy.mStatusBarDisabled = false;
+					saveSettingsLocked(userId);
+
+					final long ident = Binder.clearCallingIdentity();
+					try {
+						clearUserRestrictions(userHandle);
+						AppGlobals.getPackageManager().updatePermissionFlagsForAllApps(
+						        PackageManager.FLAG_PERMISSION_POLICY_FIXED,
+						        0  /* flagValues */, userHandle.getIdentifier());
+					} catch (RemoteException re) {
+					} finally {
+						Binder.restoreCallingIdentity(ident);
+					}
+				}
+			
+		@Override
+		public int getPermissionPolicy(ComponentName admin) throws RemoteException {
+		    int userId = UserHandle.getCallingUserId();
+		    synchronized (this) {
+		        DevicePolicyData userPolicy = getUserData(userId);
+				//adb logcat -b system | grep lvh
+				Slog.i(LOG_TAG, "lvh@@@ , userPolicy.mPermissionPolicy: " + userPolicy.mPermissionPolicy);
+		        return userPolicy.mPermissionPolicy;
+		    }
+		}
+	
 
