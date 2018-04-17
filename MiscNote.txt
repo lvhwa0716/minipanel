@@ -1,6 +1,7 @@
 
 1. BlueTooth(A2DP Sink , HFP Client)
 	BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR
+	HAS_BDROID_BUILDCFG
 	A2DP sink , 需要写APK
 
 	http://www.it1352.com/88728.html
