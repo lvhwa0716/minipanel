@@ -152,6 +152,19 @@ LOCAL_MODULE := minipaneldump
 
 include $(BUILD_EXECUTABLE)
 
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES += OledDriverTest.c
+
+LOCAL_CFLAGS += $(local_define)
+
+LOCAL_SHARED_LIBRARIES := \
+    liblog \
+    libutils
+
+LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE := OledDriverTest
+
+include $(BUILD_EXECUTABLE)
 
 BOARD_SEPOLICY_DIRS += vendor/i029/display/minipanel/sepolicy_minipanel
 PRODUCT_COPY_FILES += vendor/i029/display/minipanel/init.minipanel.rc:root/init.minipanel.rc

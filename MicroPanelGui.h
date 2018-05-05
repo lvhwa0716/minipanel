@@ -10,7 +10,7 @@
 #define MICROPANEL_HEIGHT	32
 
 #if !defined(MICROPANEL_BPP)
-	#define MICROPANEL_BPP		1	// only support BPP = 1
+	#define MICROPANEL_BPP		8	// only support BPP = 1
 #endif
 
 #define WHITE				1
@@ -37,7 +37,7 @@
 		#define DBG_ERR(fmt,arg...) fprintf ( stderr, fmt, ##arg)
 	#endif
 	// must undefine it when release
-	#define HTTP_DEBUG_PORT	9234
+	//#define HTTP_DEBUG_PORT	9234
 #else
 	#define DBG_LOG(fmt,arg...)
 	#ifdef ANDROID
