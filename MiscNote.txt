@@ -1,3 +1,7 @@
+sudo apt install device-tree-compiler
+
+dtc -I dtb -O dts xxxx.dtb  > ~/dump.dts
+
 
 1. BlueTooth(A2DP Sink , HFP Client)
 	BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR
