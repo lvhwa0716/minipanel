@@ -12,38 +12,26 @@
 
 #define OLED_DEVICE "/dev/oled128x32"
 
-void FrameBufferDump(unsigned char *bitmap, int w, int h, int bpl, int bpp)
+static const unsigned char dst_mask_[8] = {0x01, 0x02 , 0x04 ,0x08,0x10 ,0x20,0x40,0x80};
+
+void FrameBufferDump(unsigned char *bitmap, int w, int h)
 {
-	int  i, j;
+	int y, x;
 
-	unsigned char *image = bitmap;
-
-	if(bpp == 1)
-	{
-		for ( i = 0; i < h; i++ )
-		{
-			for ( j = 0; j < w; j++ ) {
-				unsigned char *addr = image + i * bpl + (j >> 3);
-				putchar( ( *addr >> (7-(j&7)) ) & 0x01 ? '*' : ' ');
-			}
-			putchar( '\n' );
-		}
+	for(x = 0 ; x < w * h / 8 ; x++) {
+		if( x % 16 == 0) 	printf ( "\n");
+		printf("0x%02X, " , bitmap[x]);
 	}
-	else if(bpp == 8)
-	{
-		for ( i = 0; i < h; i++ )
-		{
-			for ( j = 0; j < w; j++ ) {
-				if(image[i*bpl + j] == 0) {
-					putchar(' ');
-				} else if(image[i*bpl + j] < 128) {
-					putchar('+');
-				} else {
-					putchar('*');
-				}
-			}
-			putchar( '\n' );
+
+
+	printf ( "\n\n   BITMAP    \n\n");
+
+	for( y = 0; y < h  ; y++ ) {
+        for( x = 0; x < w ; x++ ) {
+			int offset = x + (y / 8 ) * 128;
+			putchar( bitmap[ offset]  & dst_mask_[y % 8] ? '*' : ' ');
 		}
+		putchar( '\n' );
 	}
 }
 
@@ -65,9 +53,10 @@ int main( int argc, char**argv )
 
 	}
 	size = read(fd,frameCache, sizeof(frameCache));
-	fprintf ( stderr, "read size = %d \n\n\n" , size);
-	FrameBufferDump(frameCache, 128, 32, 128 / 8 * MICROPANEL_BPP, MICROPANEL_BPP);
-	fprintf ( stderr, "\n\n\n");
 	close(fd);
+	fprintf ( stderr, "read size = %d \n\n\n" , size);
+	FrameBufferDump(frameCache, 128, 32);
+	fprintf ( stderr, "\n\n\n");
+	
 	return 0;
 }

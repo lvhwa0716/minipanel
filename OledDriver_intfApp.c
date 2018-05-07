@@ -10,31 +10,20 @@
 #include "MicroPanelGui.h"
 #include "OledMonoIoctl.h"
 
-#define DRIVER_MODE_GPIO	1
-#define DRIVER_MODE_SPI	2
 
-#define DRIVER_HW_MODE	DRIVER_MODE_SPI // DRIVER_MODE_GPIO or DRIVER_MODE_SPI
+
+
+//#define OLED_USE_ATTR
 
 
 #define OLED_DEVICE "/dev/oled128x32"
 
-//#define OLED_USE_ATTR
+// "0" = sleep , "1" = wakeup
+#define OLED_POWER_NODE "sys/class/ssd1316/oled128x32/oled_power"
+// "XX" = bright , hex(upcase)
+#define OLED_BRIGHT_NODE "/sys/class/ssd1316/oled128x322/oled_bright"
 
-#if (DRIVER_HW_MODE == DRIVER_MODE_GPIO)
 
-	// "0" = sleep , "1" = wakeup
-	#define OLED_POWER_NODE "/sys/class/misc/oled128x32/oled_power"
-	// "XX" = bright , hex(upcase)
-	#define OLED_BRIGHT_NODE "/sys/class/misc/oled128x32/oled_bright"
-
-#elif (DRIVER_HW_MODE == DRIVER_MODE_SPI)
-	// "0" = sleep , "1" = wakeup
-	#define OLED_POWER_NODE "/sys/class/spi_master/spi0/spi0.1/oled_power"
-	// "XX" = bright , hex(upcase)
-	#define OLED_BRIGHT_NODE "/sys/class/spi_master/spi0/spi0.1/oled_bright"
-
-	
-#endif
 
 #if defined(OLED_USE_ATTR)
 	static int fd_OLED_POWER = -1;
@@ -89,10 +78,9 @@ void OledDriver_intfApp_Sleep(void)
 	}
 	write(fd_OLED_POWER, CmdString, 2);
 #else
-	int off = 0;
 	if(fd_OLED_DEVICE >= 0)
 	{
-		ioctl(fd_OLED_DEVICE, OLED_POWER, off);
+		ioctl(fd_OLED_DEVICE, OLED_POWER, OLED_POWER_OFF);
 	}
 #endif
 }
@@ -107,10 +95,9 @@ void OledDriver_intfApp_WakeUp(void)
 	}
 	write(fd_OLED_POWER, CmdString, 2);
 #else
-	int on = 1;
 	if(fd_OLED_DEVICE >= 0)
 	{
-		ioctl(fd_OLED_DEVICE, OLED_POWER, on);
+		ioctl(fd_OLED_DEVICE, OLED_POWER, OLED_POWER_ON);
 	}
 #endif
 
@@ -138,40 +125,28 @@ void OledDriver_intfApp_Brightness(int b)
 
 }
 
-static unsigned char DRAM_V_FB[128 * 32 / 8];
-#if (MICROPANEL_BPP == 1)
-	static const unsigned char src_mask[8] = {
-		0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
-#endif
-static const unsigned char dst_mask[8] = {
-	0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01};
+static const unsigned char dst_mask_[8] = {0x01, 0x02 , 0x04 ,0x08,0x10 ,0x20,0x40,0x80};
+static const unsigned char src_mask_[8] = { 0x80,0x40, 0x20 ,0x10 ,0x08,0x04,0x02,0x01 };
 
-static unsigned char * __Oled_Convert(unsigned char *pBuf) // HORIZONTAL => VERTICAL
+#define getpixel(buf, x, y) (buf[((y) * 16) + ((x) >> 3)] & src_mask_[(x) & 0x7])
+#define setpixel(buf, x, y) (buf[(x) + ((y) >> 3 ) * 128] |= dst_mask_[(y) & 0x7])
+static unsigned char * __Oled_Convert(unsigned char *pBuf)
 {
-	int i, j;
-
+	int y, x;
+	
+	static unsigned char DRAM_V_FB[128 * 32 / 8];
 	memset(DRAM_V_FB, 0, sizeof(DRAM_V_FB));
-	for( i = 0 ; i < 4; i++)
-	{
-		for( j = 0 ; j < 128; j++)
-		{
-			unsigned char dst_data = 0;
-			int raw_idx = 0;
-			for(raw_idx = 0; raw_idx < 8; raw_idx++)
-			{
-				#if (MICROPANEL_BPP == 1)
-					if(*(pBuf + i * 8 * 32 + raw_idx * 32 + (j >> 3)) & src_mask[j & 0x7])
-					{
-						dst_data = dst_data | dst_mask[j & 0x7];
-					}
-				#elif (MICROPANEL_BPP == 8)
-					if(*(pBuf + i * 8 * 32 * MICROPANEL_BPP + raw_idx * 32 * MICROPANEL_BPP + j) == 0)
-					{
-						dst_data = dst_data | dst_mask[j & 0x7];
-					}
-				#endif
-			}
-			DRAM_V_FB[ i * 128 + j] = dst_data;
+	for( y = 0; y < 32 ; y++ ) {
+        for( x = 0; x < 128  ; x++ ) {
+			#if 0 
+				// 1bpp
+		        if( 0 != getpixel(pBuf, x , y) )
+		        	setpixel(DRAM_V_FB, x , y);
+			#else
+				// 8bpp
+				if( 0 != (pBuf[x , y * 128] & 0x80) )
+		        	setpixel(DRAM_V_FB, x , y);
+			#endif
 		}
 	}
 	return DRAM_V_FB;
@@ -183,13 +158,16 @@ void OledDriver_intfApp_Update(unsigned char *pBuf, int x, int y, int w, int h)
 	if(fd_OLED_DEVICE >= 0)
 	{
 		struct oled_rect _rect;
+		struct oled_framebuffer fb;
 		int ret = 0;
+		fb.size = OLED_FRAMEBUFFER_SIZE;
+		fb.pbuf = pBuf;
+		ret = ioctl(fd_OLED_DEVICE, OLED_FILLFB, &fb);
+		DBG_LOG("OLED_DEVICE fill framebuffer: %d" , ret);
 		_rect.x = (unsigned int)x;
 		_rect.y = (unsigned int)y;
 		_rect.w = (unsigned int)w;
 		_rect.h = (unsigned int)h;
-		ret = ioctl(fd_OLED_DEVICE, OLED_FILLFB, pBuf);
-		DBG_LOG("OLED_DEVICE fill framebuffer: %d" , ret);
 		ret = ioctl(fd_OLED_DEVICE, OLED_UPDATERECT, &_rect);
 		DBG_LOG("OLED_DEVICE update rect: %d" , ret);
 	} else {
