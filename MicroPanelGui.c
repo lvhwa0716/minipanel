@@ -337,6 +337,12 @@ void mpGui_DrawBitmap(int dstx, int dsty, unsigned char* bmp, int bmp_w, int bmp
 	int h = bmp_h;
 
 	bmp_bpp = bmp_bpp; // not used , must set 1
+
+	if(bmp_bpp != 1)
+	{
+		DBG_ERR( " bmp_bpp != 1 , ignore\n");
+		return;
+	}
 	// need clip
 	if(dstx < 0)
 	{
