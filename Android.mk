@@ -33,7 +33,7 @@ local_debug_shared_lib :=  libcrypto libssl libz
 include $(CLEAR_VARS)
 LOCAL_SRC_FILES:= $(src_files)
 LOCAL_SHARED_LIBRARIES := libicuuc liblog
-LOCAL_MODULE_TAGS := optional
+#LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := libminipanel
 LOCAL_C_INCLUDES += \
     external/harfbuzz_ng/src \
@@ -98,7 +98,7 @@ include $(BUILD_EXECUTABLE)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := com.i029.minipanel.IMicroPanelService
-LOCAL_MODULE_TAGS := optional
+#LOCAL_MODULE_TAGS := optional
 LOCAL_SRC_FILES := $(call all-java-files-under, java) $(call all-Iaidl-files-under, java)
 
 
@@ -162,9 +162,17 @@ LOCAL_SHARED_LIBRARIES := \
     libutils
 
 LOCAL_MODULE_TAGS := optional
-LOCAL_MODULE := OledDriverTest
+LOCAL_MODULE := minipanelDriverTest
 
 include $(BUILD_EXECUTABLE)
+
+#### BootLoader Lib
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES:= OledDriver_intfApp.c 
+LOCAL_MODULE := libminipanel_bootloader
+
+include $(BUILD_STATIC_LIBRARY)
+#### BootLoader Lib End
 
 BOARD_SEPOLICY_DIRS += vendor/i029/display/minipanel/sepolicy_minipanel
 PRODUCT_COPY_FILES += vendor/i029/display/minipanel/init.minipanel.rc:root/init.minipanel.rc
