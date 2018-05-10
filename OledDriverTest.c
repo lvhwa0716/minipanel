@@ -9,7 +9,19 @@
 /***************************************************************************************/
 
 #define OLED_DEVICE "/dev/oled128x32"
+extern void OledDriver_intfApp_Init(void);
+extern void OledDriver_intfApp_DeInit(void);
+extern void OledDriver_intfApp_Sleep(void);
+extern void OledDriver_intfApp_WakeUp(void);
+extern void OledDriver_intfApp_Brightness(int b);
+extern void OledDriver_intfApp_Update(unsigned char *pBuf, int x, int y, int w, int h);
+extern int  OledDriver_intfApp_getFd(void);
+unsigned char * OledDriver_intfApp_Convert_8bpp(unsigned char *pBuf);
+unsigned char * OledDriver_intfApp_Convert_1bpp(unsigned char *pBuf);
 
+extern void bootLoadOLED_FillRect(int x, int y, int w, int h, int c);
+extern void bootLoadOLED_Text(int x, int y, char *str , int c);
+extern void bootLoadOLED_Update(void);
 
 void usage()
 {
@@ -28,6 +40,7 @@ struct image_local {
 };
 
 static const unsigned char dst_mask_[8] = {0x01, 0x02 , 0x04 ,0x08,0x10 ,0x20,0x40,0x80};
+static const unsigned char dst_not_mask_[8] = {0xFE, 0xFD , 0xFB ,0xF7,0xEF ,0xDF,0xBF,0x7F};
 static const unsigned char src_mask_[8] = { 0x80,0x40, 0x20 ,0x10 ,0x08,0x04,0x02,0x01 };
 
 void FrameBufferDump(unsigned char *bitmap, int w, int h)
@@ -50,25 +63,7 @@ void FrameBufferDump(unsigned char *bitmap, int w, int h)
 		putchar( '\n' );
 	}
 }
-
-#define getpixel(buf, x, y) (buf[((y) << 4) + ((x) >> 3)] & src_mask_[(x) & 0x7])
-#define setpixel(buf, x, y) (buf[(x) + ((y) >> 3 ) * 128] |= dst_mask_[(y) & 0x7])
-static unsigned char * __Oled_Convert(unsigned char *pBuf)
-{
-	int y, x;
-	
-	static unsigned char DRAM_V_FB[128 * 32 / 8];
-	memset(DRAM_V_FB, 0, sizeof(DRAM_V_FB));
-	for( y = 0; y < 32 ; y++ ) {
-        for( x = 0; x < 128  ; x++ ) {
-			
-            if( 0 != getpixel(pBuf, x , y) )
-            	setpixel(DRAM_V_FB, x , y);
-		}
-	}
-	return DRAM_V_FB;
-}
-
+static unsigned char frameCache[8192];
 int main( int argc, char**  argv )
 {
 	struct oled_rect _rect;
@@ -87,8 +82,8 @@ int main( int argc, char**  argv )
 		usage();
 		return 0;
 	}
-
-	fd = open(OLED_DEVICE, O_RDWR);
+	OledDriver_intfApp_Init();
+	fd = OledDriver_intfApp_getFd();
 	if(fd < 0){
 		fprintf(stderr,"%s open failed \n" , OLED_DEVICE);
 		return -1;
@@ -103,8 +98,12 @@ int main( int argc, char**  argv )
 		memset(frame_buffer, 0x00, sizeof(frame_buffer));
 		ioctl(fd, OLED_FILLFB, &fb);
 		ioctl(fd, OLED_UPDATERECT, &_rect);
-	} else if (0 == strcmp(argv[1], "raw")) {
-		memcpy(frame_buffer, __Oled_Convert((unsigned char*)init_rawdata), sizeof(frame_buffer));
+	} else if (0 == strcmp(argv[1], "raw1")) {
+		memcpy(frame_buffer, OledDriver_intfApp_Convert_1bpp((unsigned char*)init_rawdata), sizeof(frame_buffer));
+		ioctl(fd, OLED_FILLFB, &fb);
+		ioctl(fd, OLED_UPDATERECT, &_rect);
+	}  else if (0 == strcmp(argv[1], "raw8")) {
+		memcpy(frame_buffer, OledDriver_intfApp_Convert_8bpp((unsigned char*)init_rawdata_8), sizeof(frame_buffer));
 		ioctl(fd, OLED_FILLFB, &fb);
 		ioctl(fd, OLED_UPDATERECT, &_rect);
 	} else if (0 == strcmp(argv[1], "image")) {
@@ -123,10 +122,22 @@ int main( int argc, char**  argv )
 				break;
 			}
 		}
+	} else if (0 == strcmp(argv[1], "boot")) {
+
+		if(argc != 3) usage();
+		bootLoadOLED_FillRect(0, 0, 128, 32, 0);
+		bootLoadOLED_Text(4, 4, argv[2] , 1);
+		bootLoadOLED_Update();
+	} else if (0 == strcmp(argv[1], "dump")) {
+
+		int size = read(fd,frameCache, sizeof(frameCache));
+		fprintf ( stderr, "read size = %d \n\n\n" , size);
+		FrameBufferDump(frameCache, 128, 32);
+		fprintf ( stderr, "\n\n\n");
 	} else {
 		usage();
 	}
-	close(fd);
+	OledDriver_intfApp_DeInit();
 	return 0;
 }
 

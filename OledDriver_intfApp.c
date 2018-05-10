@@ -9,7 +9,8 @@
 
 #include "OledMonoIoctl.h"
 
-#if 0
+#ifdef DEBUG_LOG
+	#include <utils/Log.h>
 	#define DBG_ERR(fmt,arg...) ALOGE(fmt, ##arg)
 #else
 	#define DBG_ERR(fmt,arg...)
@@ -132,9 +133,14 @@ static const unsigned char dst_mask_[8] = {0x01, 0x02 , 0x04 ,0x08,0x10 ,0x20,0x
 static const unsigned char dst_not_mask_[8] = {0xFE, 0xFD , 0xFB ,0xF7,0xEF ,0xDF,0xBF,0x7F};
 static const unsigned char src_mask_[8] = { 0x80,0x40, 0x20 ,0x10 ,0x08,0x04,0x02,0x01 };
 
-#define getpixel(buf, x, y) (buf[((y) * 16) + ((x) >> 3)] & src_mask_[(x) & 0x7])
+// software map
+#define getpixel_8bit(buf, x, y) (buf[((y) * 128) + (x)] & 0x80)
+#define getpixel_1bit(buf, x, y) (buf[((y) << 4) + ((x) >> 3)] & src_mask_[(x) & 0x7])
+// Hardware
 #define setpixel(buf, x, y) (buf[(x) + ((y) >> 3 ) * 128] |= dst_mask_[(y) & 0x7])
-static unsigned char * __Oled_Convert(unsigned char *pBuf)
+#define clearpixel(buf, x, y) (buf[(x) + ((y) >> 3 ) * 128] &= dst_not_mask_[(y) & 0x7])
+
+unsigned char * OledDriver_intfApp_Convert_8bpp(unsigned char *pBuf)
 {
 	int y, x;
 	
@@ -142,15 +148,25 @@ static unsigned char * __Oled_Convert(unsigned char *pBuf)
 	memset(DRAM_V_FB, 0, sizeof(DRAM_V_FB));
 	for( y = 0; y < 32 ; y++ ) {
         for( x = 0; x < 128  ; x++ ) {
-			#if 0 
-				// 1bpp
-		        if( 0 != getpixel(pBuf, x , y) )
-		        	setpixel(DRAM_V_FB, x , y);
-			#else
-				// 8bpp
-				if( 0 != (pBuf[x , y * 128] & 0x80) )
-		        	setpixel(DRAM_V_FB, x , y);
-			#endif
+			
+            if( 0 != getpixel_8bit(pBuf, x , y) )
+            	setpixel(DRAM_V_FB, x , y);
+		}
+	}
+	return DRAM_V_FB;
+}
+
+unsigned char * OledDriver_intfApp_Convert_1bpp(unsigned char *pBuf)
+{
+	int y, x;
+	
+	static unsigned char DRAM_V_FB[128 * 32 / 8];
+	memset(DRAM_V_FB, 0, sizeof(DRAM_V_FB));
+	for( y = 0; y < 32 ; y++ ) {
+        for( x = 0; x < 128  ; x++ ) {
+			
+            if( 0 != getpixel_1bit(pBuf, x , y) )
+            	setpixel(DRAM_V_FB, x , y);
 		}
 	}
 	return DRAM_V_FB;
@@ -158,7 +174,7 @@ static unsigned char * __Oled_Convert(unsigned char *pBuf)
 
 void OledDriver_intfApp_Update(unsigned char *pBuf, int x, int y, int w, int h)
 {
-	pBuf = __Oled_Convert(pBuf);
+	pBuf = OledDriver_intfApp_Convert_8bpp(pBuf);
 	if(fd_OLED_DEVICE >= 0)
 	{
 		struct oled_rect _rect;
@@ -179,10 +195,14 @@ void OledDriver_intfApp_Update(unsigned char *pBuf, int x, int y, int w, int h)
 	}
 }
 
+int OledDriver_intfApp_getFd(void)
+{
+	return fd_OLED_DEVICE;
+}
 
 // bootLoad Driver
 // called by screen_ui.cpp
-#define ASCII_BEGIN		0x21
+#define ASCII_BEGIN		0x20
 #define ASCII_END		0xFF
 #define ASCII_HEIGHT	0x8
 #define ASCII_WIDTH		0x5
@@ -190,6 +210,7 @@ void OledDriver_intfApp_Update(unsigned char *pBuf, int x, int y, int w, int h)
 
 static const unsigned char Ascii_BitMap[ASCII_END - ASCII_BEGIN + 1][5]={
 						//   Basic Characters
+	{0x00,0x00,0x00,0x00,0x00},		//   (   )    - 0x0020 Space
 	{0x00,0x00,0x4F,0x00,0x00},		//   (  1)  ! - 0x0021 Exclamation Mark
 	{0x00,0x07,0x00,0x07,0x00},		//   (  2)  " - 0x0022 Quotation Mark
 	{0x14,0x7F,0x14,0x7F,0x14},		//   (  3)  # - 0x0023 Number Sign
@@ -377,53 +398,55 @@ static const unsigned char Ascii_BitMap[ASCII_END - ASCII_BEGIN + 1][5]={
 	{0x0C,0x51,0x50,0x51,0x3C},		//   (185) "y - 0x00FF Latin Small Letter Y with Diaeresis
 };
 static unsigned char bootLoadOLED_FB[128 * 32 / 8];
-
+static unsigned char volatile test_char = 0;
 void bootLoadOLED_Init() {
 	OledDriver_intfApp_Init();
 	memset(bootLoadOLED_FB, 0, sizeof(bootLoadOLED_FB));
 }
 
-static int needDraw(int x, int y) {
+void bootLoadOLED_DrawPixel(int x, int y, int c) {
+#if 1
 	if( ( x >= 0 ) && (x < 128)
 		&& ( y >= 0 ) && (y < 32)
 	) {
-		return 1;
+	#if 0
+		if(c != 0) {
+			setpixel(bootLoadOLED_FB, x, y);
+		} else {
+			clearpixel(bootLoadOLED_FB, x, y);
+		}
+	#else
+		test_char = (unsigned char)(c + x + y);
+	#endif
 	}
-	return 0;
-}
-void bootLoadOLED_DrawPixel(int x, int y, int c) {
-	if(needDraw(x, y) == 0)
-		return;
-
-	if(c != 0) {
-		bootLoadOLED_FB[(x) + ((y) >> 3 ) * 128] |= dst_mask_[(y) & 0x7];
-	} else {
-		bootLoadOLED_FB[(x) + ((y) >> 3 ) * 128] &= dst_not_mask_[(y) & 0x7];
-	}
+#endif
 }
 
 void bootLoadOLED_HLine(int x1, int x2, int y, int c) {
-	while( x1 < x2) {
+	while( x1 <= x2) {
 		bootLoadOLED_DrawPixel(x1,y,c);
 		x1++;
 	}
 }
 
 void bootLoadOLED_VLine(int x, int y1, int y2, int c) {
-	while( y1 < y2) {
+	while( y1 <= y2) {
 		bootLoadOLED_DrawPixel(x,y1,c);
 		y1++;
 	}
 }
 
 void bootLoadOLED_FillRect(int x, int y, int w, int h, int c) {
+
 	while(y < (y + h)) {
 		bootLoadOLED_HLine(x, x + w, y, c);
 		y++;
 	}
+
 }
 // only English
 void bootLoadOLED_Text(int x, int y, char *str , int c) {
+
 	int xf, yf;
 	while( *str != 0) {
 		const unsigned char * p = Ascii_BitMap['?' - ASCII_BEGIN];
@@ -432,7 +455,7 @@ void bootLoadOLED_Text(int x, int y, char *str , int c) {
 		}
 		for(xf = 0; xf < ASCII_WIDTH ; xf++) {
 			unsigned char bit = p[ASCII_WIDTH - 1 - xf];
-			for(yf = 0; yf < ASCII_HEIGHT ; xf++) {
+			for(yf = 0; yf < ASCII_HEIGHT ; yf++) {
 				bootLoadOLED_DrawPixel( x + xf, y + yf, bit & dst_mask_[yf] ? c : ~c);
 			}
 		}
@@ -441,6 +464,7 @@ void bootLoadOLED_Text(int x, int y, char *str , int c) {
 		str++;
 
 	}
+
 }
 void bootLoadOLED_Update(void)
 {
@@ -455,8 +479,8 @@ void bootLoadOLED_Update(void)
 		
 		_rect.x = 0;
 		_rect.y = 0;
-		_rect.w = 127;
-		_rect.h = 31;
+		_rect.w = 128;
+		_rect.h = 32;
 		ret = ioctl(fd_OLED_DEVICE, OLED_UPDATERECT, &_rect);
 		
 	} else {
