@@ -134,7 +134,7 @@ LOCAL_SHARED_LIBRARIES += $(local_debug_shared_lib)
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES += FrameBufferDump.c
+LOCAL_SRC_FILES := FrameBufferDump.c
 
 LOCAL_CFLAGS += $(local_define)
 
@@ -153,7 +153,7 @@ LOCAL_MODULE := minipaneldump
 include $(BUILD_EXECUTABLE)
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES += OledDriverTest.c
+LOCAL_SRC_FILES := OledDriverTest.c OledDriver_intfApp.c
 
 LOCAL_CFLAGS += $(local_define)
 
@@ -165,14 +165,6 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := minipanelDriverTest
 
 include $(BUILD_EXECUTABLE)
-
-#### BootLoader Lib
-include $(CLEAR_VARS)
-LOCAL_SRC_FILES:= OledDriver_intfApp.c 
-LOCAL_MODULE := libminipanel_bootloader
-
-include $(BUILD_STATIC_LIBRARY)
-#### BootLoader Lib End
 
 BOARD_SEPOLICY_DIRS += vendor/i029/display/minipanel/sepolicy_minipanel
 PRODUCT_COPY_FILES += vendor/i029/display/minipanel/init.minipanel.rc:root/init.minipanel.rc
