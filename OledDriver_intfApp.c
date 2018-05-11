@@ -405,21 +405,17 @@ void bootLoadOLED_Init() {
 }
 
 void bootLoadOLED_DrawPixel(int x, int y, int c) {
-#if 1
+
 	if( ( x >= 0 ) && (x < 128)
 		&& ( y >= 0 ) && (y < 32)
 	) {
-	#if 0
 		if(c != 0) {
 			setpixel(bootLoadOLED_FB, x, y);
 		} else {
 			clearpixel(bootLoadOLED_FB, x, y);
 		}
-	#else
-		test_char = (unsigned char)(c + x + y);
-	#endif
 	}
-#endif
+
 }
 
 void bootLoadOLED_HLine(int x1, int x2, int y, int c) {
@@ -437,8 +433,8 @@ void bootLoadOLED_VLine(int x, int y1, int y2, int c) {
 }
 
 void bootLoadOLED_FillRect(int x, int y, int w, int h, int c) {
-
-	while(y < (y + h)) {
+	int bottom = y + h;
+	while(y < bottom) {
 		bootLoadOLED_HLine(x, x + w, y, c);
 		y++;
 	}
@@ -454,9 +450,9 @@ void bootLoadOLED_Text(int x, int y, char *str , int c) {
 			p = Ascii_BitMap[((unsigned char)*str - ASCII_BEGIN) & 0xFF];
 		}
 		for(xf = 0; xf < ASCII_WIDTH ; xf++) {
-			unsigned char bit = p[ASCII_WIDTH - 1 - xf];
+			unsigned char bit = p[xf];
 			for(yf = 0; yf < ASCII_HEIGHT ; yf++) {
-				bootLoadOLED_DrawPixel( x + xf, y + yf, bit & dst_mask_[yf] ? c : ~c);
+				bootLoadOLED_DrawPixel( x + xf, y + yf, bit & dst_mask_[yf] ? c : !c);
 			}
 		}
 		x = x + ASCII_WIDTH + ASCII_X_I;

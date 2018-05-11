@@ -16,9 +16,12 @@ extern void OledDriver_intfApp_WakeUp(void);
 extern void OledDriver_intfApp_Brightness(int b);
 extern void OledDriver_intfApp_Update(unsigned char *pBuf, int x, int y, int w, int h);
 extern int  OledDriver_intfApp_getFd(void);
-unsigned char * OledDriver_intfApp_Convert_8bpp(unsigned char *pBuf);
-unsigned char * OledDriver_intfApp_Convert_1bpp(unsigned char *pBuf);
+extern unsigned char * OledDriver_intfApp_Convert_8bpp(unsigned char *pBuf);
+extern unsigned char * OledDriver_intfApp_Convert_1bpp(unsigned char *pBuf);
 
+extern void bootLoadOLED_DrawPixel(int x, int y, int c);
+extern void bootLoadOLED_HLine(int x1, int x2, int y, int c);
+extern void bootLoadOLED_VLine(int x, int y1, int y2, int c);
 extern void bootLoadOLED_FillRect(int x, int y, int w, int h, int c);
 extern void bootLoadOLED_Text(int x, int y, char *str , int c);
 extern void bootLoadOLED_Update(void);
@@ -108,7 +111,10 @@ int main( int argc, char**  argv )
 		ioctl(fd, OLED_UPDATERECT, &_rect);
 	} else if (0 == strcmp(argv[1], "image")) {
 		int i;
-		if(argc != 3) usage();
+		if(argc != 3) {
+			usage();
+			goto exit_error;
+		}
 
 		for( i = 0; ; i++) {
 			if(g_Image[i].pImage == NULL) {
@@ -124,10 +130,28 @@ int main( int argc, char**  argv )
 		}
 	} else if (0 == strcmp(argv[1], "boot")) {
 
-		if(argc != 3) usage();
+		if(argc != 3) {
+			usage();
+			goto exit_error;
+		}
+	#if 1
 		bootLoadOLED_FillRect(0, 0, 128, 32, 0);
 		bootLoadOLED_Text(4, 4, argv[2] , 1);
 		bootLoadOLED_Update();
+	#endif
+	#if 0
+		fprintf ( stderr, "DrawPixel\n");
+		bootLoadOLED_DrawPixel(0,0,1);
+		fprintf ( stderr, "HLine\n");
+		bootLoadOLED_HLine(0, 127, 4, 1);
+		fprintf ( stderr, "VLine\n");
+		bootLoadOLED_HLine(10, 0, 31, 1);
+		fprintf ( stderr, "FillRect\n");
+		bootLoadOLED_FillRect(0, 0, 128, 32, 0);
+		fprintf ( stderr, "Text\n");
+		bootLoadOLED_Text(4, 4, argv[2] , 1);
+		bootLoadOLED_Update();
+	#endif
 	} else if (0 == strcmp(argv[1], "dump")) {
 
 		int size = read(fd,frameCache, sizeof(frameCache));
@@ -137,6 +161,7 @@ int main( int argc, char**  argv )
 	} else {
 		usage();
 	}
+exit_error:
 	OledDriver_intfApp_DeInit();
 	return 0;
 }
