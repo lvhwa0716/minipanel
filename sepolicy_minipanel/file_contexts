@@ -7,6 +7,6 @@
 /system/bin/minipaneltest u:object_r:minipanelservice_exec:s0
 
 /dev/oled128x32 u:object_r:oled128x32_device:s0
-/sys/class/misc/oled128x32/oled(/.*)?  u:object_r:sysfs_misc_oled:s0
+sys/class/ssd1316/oled128x32/oled(/.*)?  u:object_r:sysfs_misc_oled:s0
 /sys/class/spi_master/spi0/spi0.1/oled(/.*)?  u:object_r:sysfs_spi_oled:s0
 
