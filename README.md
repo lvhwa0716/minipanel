@@ -181,4 +181,9 @@
 		    }
 		}
 	
-
+#9 禁止锁屏
+	frameworks/base/packages/SettingsProvider/src/com/android/providers/settings/DatabaseHelper.java
+	缺省禁止锁屏
+	Settings.System.LOCKSCREEN_DISABLED
+	PRODUCT_PROPERTY_OVERRIDES += ro.lockscreen.disable.default=true
+	可以在PhoneWindowManager.java中不创建 KeyguardServiceDelegate(mContext)

@@ -13,8 +13,6 @@
 # limitations under the License.
 
 
-# must add BoardConfig.mk
-# PRODUCT_PACKAGES += minipanelservice
 #
 
 LOCAL_PATH:= $(call my-dir)
@@ -166,11 +164,6 @@ LOCAL_MODULE := minipanelDriverTest
 
 include $(BUILD_EXECUTABLE)
 
-BOARD_SEPOLICY_DIRS += vendor/i029/display/minipanel/sepolicy_minipanel
-PRODUCT_COPY_FILES += vendor/i029/display/minipanel/init.minipanel.rc:root/init.minipanel.rc
-PRODUCT_PACKAGES += minipanelservice
-
-ADDITIONAL_DEFAULT_PROPERTIES += persist.sys.usb.config=adb
 
 
 
