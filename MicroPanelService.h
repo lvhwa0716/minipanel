@@ -69,6 +69,7 @@ namespace android {
 		}
 		MicroPanelService();
 		virtual ~MicroPanelService();
+		virtual status_t dump(int fd, const Vector<String16>& args);
 
 		// IMicroPanelService
 		void Rect(int x, int y, int w, int h);

@@ -14,11 +14,15 @@
 #include <utils/String8.h>
 #include <binder/IPCThreadState.h>
 #include <binder/Parcel.h>
+#include <binder/PermissionCache.h>
+#include <private/android_filesystem_config.h>
 
 #include "MicroPanelGui.h"
 #include "MicroPanelService.h"
 
 //#define HAS_readByteVector	// new android version
+
+extern "C" unsigned char * OledDriver_intfApp_getFrameBuf(void);
 
 namespace android {  
 
@@ -533,6 +537,56 @@ namespace android {
 	{
 		mpGui_FontSize( w,  h);
 	}
+	status_t MicroPanelService::dump(int fd, const Vector<String16>& args)
+	{
+		String8 result;
+		const String16 sDump("android.permission.DUMP");
+		IPCThreadState* ipc = IPCThreadState::self();
+		const int pid = ipc->getCallingPid();
+		const int uid = ipc->getCallingUid();
+		if ((uid != AID_SHELL) &&
+		        !PermissionCache::checkPermission(sDump, pid, uid)) {
+		    result.appendFormat("Permission Denial: "
+		            "can't dump MicroPanelService from pid=%d, uid=%d\n", pid, uid);
+		} else {
+			result.appendFormat("Width : %d \n" , MICROPANEL_WIDTH);
+			result.appendFormat("Height : %d \n" , MICROPANEL_HEIGHT);
+			result.appendFormat("bit : %d \n" , 1);
+			
+			int i;
+			size_t numArgs = args.size();
+			if(numArgs == 0) {
+				const unsigned char * pData = OledDriver_intfApp_getFrameBuf();	
+				for(i = 1; i <= MICROPANEL_WIDTH * MICROPANEL_HEIGHT * 1 / 8; i++ ) {
+					result.appendFormat("0x%02X,",*pData);
+					if(i % 16 == 0)	result.appendFormat("\n");
+					pData++;
+				}
+			} else {
+				int index = 0;
+				if ((index < numArgs) &&
+                    (args[index] == String16("image"))) {
+		            index++;
+		            {
+						int y, x;
+						int w = MICROPANEL_WIDTH;
+						int h = MICROPANEL_HEIGHT;
+						const unsigned char * bitmap = OledDriver_intfApp_getFrameBuf();
+						const unsigned char dst_mask_[8] = {0x01, 0x02 , 0x04 ,0x08,0x10 ,0x20,0x40,0x80};
 
+						for( y = 0; y < h  ; y++ ) {
+							for( x = 0; x < w ; x++ ) {
+								int offset = x + (y / 8 ) * 128;
+								result.appendFormat("%c", ( bitmap[ offset]  & dst_mask_[y % 8] ? '*' : ' '));
+							}
+							result.appendFormat("\n");
+						}
+					}
+            	}
+			}
+		}
+		write(fd, result.string(), result.size());
+		return NO_ERROR;
+	}
 }
 
