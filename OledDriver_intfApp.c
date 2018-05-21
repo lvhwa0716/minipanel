@@ -129,6 +129,8 @@ void OledDriver_intfApp_Brightness(int b)
 
 }
 
+static unsigned char OLED_FRAMEBUFFER_SHADOW[128 * 32 / 8];
+
 static const unsigned char dst_mask_[8] = {0x01, 0x02 , 0x04 ,0x08,0x10 ,0x20,0x40,0x80};
 static const unsigned char dst_not_mask_[8] = {0xFE, 0xFD , 0xFB ,0xF7,0xEF ,0xDF,0xBF,0x7F};
 static const unsigned char src_mask_[8] = { 0x80,0x40, 0x20 ,0x10 ,0x08,0x04,0x02,0x01 };
@@ -144,32 +146,30 @@ unsigned char * OledDriver_intfApp_Convert_8bpp(unsigned char *pBuf)
 {
 	int y, x;
 	
-	static unsigned char DRAM_V_FB[128 * 32 / 8];
-	memset(DRAM_V_FB, 0, sizeof(DRAM_V_FB));
+	memset(OLED_FRAMEBUFFER_SHADOW, 0, sizeof(OLED_FRAMEBUFFER_SHADOW));
 	for( y = 0; y < 32 ; y++ ) {
         for( x = 0; x < 128  ; x++ ) {
 			
             if( 0 != getpixel_8bit(pBuf, x , y) )
-            	setpixel(DRAM_V_FB, x , y);
+            	setpixel(OLED_FRAMEBUFFER_SHADOW, x , y);
 		}
 	}
-	return DRAM_V_FB;
+	return OLED_FRAMEBUFFER_SHADOW;
 }
 
 unsigned char * OledDriver_intfApp_Convert_1bpp(unsigned char *pBuf)
 {
 	int y, x;
 	
-	static unsigned char DRAM_V_FB[128 * 32 / 8];
-	memset(DRAM_V_FB, 0, sizeof(DRAM_V_FB));
+	memset(OLED_FRAMEBUFFER_SHADOW, 0, sizeof(OLED_FRAMEBUFFER_SHADOW));
 	for( y = 0; y < 32 ; y++ ) {
         for( x = 0; x < 128  ; x++ ) {
 			
             if( 0 != getpixel_1bit(pBuf, x , y) )
-            	setpixel(DRAM_V_FB, x , y);
+            	setpixel(OLED_FRAMEBUFFER_SHADOW, x , y);
 		}
 	}
-	return DRAM_V_FB;
+	return OLED_FRAMEBUFFER_SHADOW;
 }
 
 void OledDriver_intfApp_Update(unsigned char *pBuf, int x, int y, int w, int h)
@@ -198,6 +198,11 @@ void OledDriver_intfApp_Update(unsigned char *pBuf, int x, int y, int w, int h)
 int OledDriver_intfApp_getFd(void)
 {
 	return fd_OLED_DEVICE;
+}
+
+unsigned char * OledDriver_intfApp_getFrameBuf(void)
+{
+	return OLED_FRAMEBUFFER_SHADOW;
 }
 
 // bootLoad Driver
@@ -397,8 +402,9 @@ static const unsigned char Ascii_BitMap[ASCII_END - ASCII_BEGIN + 1][5]={
 	{0x7E,0x14,0x14,0x14,0x08},		//   (184)  p - 0x00FE Latin Small Letter Thom
 	{0x0C,0x51,0x50,0x51,0x3C},		//   (185) "y - 0x00FF Latin Small Letter Y with Diaeresis
 };
-static unsigned char bootLoadOLED_FB[128 * 32 / 8];
-static unsigned char volatile test_char = 0;
+
+#define bootLoadOLED_FB OLED_FRAMEBUFFER_SHADOW
+
 void bootLoadOLED_Init() {
 	OledDriver_intfApp_Init();
 	memset(bootLoadOLED_FB, 0, sizeof(bootLoadOLED_FB));
