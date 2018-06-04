@@ -28,6 +28,6 @@ allow minipanelservice oled128x32_device:chr_file { read write ioctl open };
 
 allow minipanelservice sysfs_misc_oled:file rw_file_perms;
 
-allow minipanelservice sysfs_spi_oled:file rw_file_perms;
+#allow minipanelservice sysfs_spi_oled:file rw_file_perms;
 
 

@@ -129,7 +129,7 @@ void OledDriver_intfApp_Brightness(int b)
 
 }
 
-static unsigned char OLED_FRAMEBUFFER_SHADOW[128 * 32 / 8];
+static unsigned char OLED_FRAMEBUFFER_SHADOW[OLED_FRAMEBUFFER_SIZE];
 
 static const unsigned char dst_mask_[8] = {0x01, 0x02 , 0x04 ,0x08,0x10 ,0x20,0x40,0x80};
 static const unsigned char dst_not_mask_[8] = {0xFE, 0xFD , 0xFB ,0xF7,0xEF ,0xDF,0xBF,0x7F};
@@ -481,8 +481,8 @@ void bootLoadOLED_Update(void)
 		
 		_rect.x = 0;
 		_rect.y = 0;
-		_rect.w = 128;
-		_rect.h = 32;
+		_rect.w = 127;
+		_rect.h = 31;
 		ret = ioctl(fd_OLED_DEVICE, OLED_UPDATERECT, &_rect);
 		
 	} else {

@@ -1,6 +1,7 @@
 PRODUCT_PACKAGES += minipanelservice minipanelDriverTest
 
 BOARD_SEPOLICY_DIRS += vendor/i029/display/minipanel/sepolicy_minipanel
+
 PRODUCT_COPY_FILES += vendor/i029/display/minipanel/init.minipanel.rc:root/init.minipanel.rc
 
 #must touch device/....../system.prop to rebuild 

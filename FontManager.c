@@ -154,7 +154,7 @@ static const unsigned char notmask[8] = {
 
 #define ADDR8 unsigned char*
 #define MWCOORD int
-static inline void FontManager_1_blitfromFont( MWCOORD dstx, MWCOORD dsty,FT_Bitmap* srcpsd)
+static inline void FontManager_1_blitfromFont( MWCOORD dstx, MWCOORD dsty,FT_Bitmap* srcpsd, int color)
 {
 	// from MicroWindow fblib1rev.c
 	int		i;
@@ -211,13 +211,15 @@ static inline void FontManager_1_blitfromFont( MWCOORD dstx, MWCOORD dsty,FT_Bit
 		ADDR8	s = src;
 		MWCOORD	dx = dstx;
 		MWCOORD	sx = srcx;
-
+		if(color == 0) *s = (*s) ^ 0xFF;
 		for(i=0; i<w; ++i) {
 			*d = (*d & notmask[dx&7]) | ((*s >> (7 - (sx&7)) & 0x01) << (7 - (dx&7)));
 			if((++dx & 7) == 0)
 				++d;
-			if((++sx & 7) == 0)
+			if((++sx & 7) == 0) {
 				++s;
+				if(color == 0) *s = (*s) ^ 0xFF;
+			}
 		}
 		dst += dpitch;
 		src += spitch;
@@ -226,7 +228,7 @@ static inline void FontManager_1_blitfromFont( MWCOORD dstx, MWCOORD dsty,FT_Bit
 }
 #undef ADDR8
 #undef MWCOORD
-static void FontManager_FillBitmap( FT_Bitmap*  bitmap, FT_Int x, FT_Int y)
+static void FontManager_FillBitmap( FT_Bitmap*  bitmap, FT_Int x, FT_Int y, int color)
 {
 	FT_Int  i, j, p, q;
 	FT_Int  x_max = x + bitmap->width;
@@ -249,7 +251,7 @@ static void FontManager_FillBitmap( FT_Bitmap*  bitmap, FT_Int x, FT_Int y)
 				}
 			}
 		#else
-			FontManager_1_blitfromFont( x, y, bitmap);
+			FontManager_1_blitfromFont( x, y, bitmap, color);
 		#endif
 	}
 	else if(gFontManager.bpp == 8)
@@ -261,13 +263,17 @@ static void FontManager_FillBitmap( FT_Bitmap*  bitmap, FT_Int x, FT_Int y)
 				if ( i < 0 || j < 0 || i >= gFontManager.width || j >= gFontManager.height )
 					continue;
 				image[BPL * j + i] |= bitmap->buffer[q * bitmap->pitch + p];
+				if( color == 0)
+				{
+					image[BPL * j + i] = ~image[BPL * j + i];
+				}
 			}
 		}
 	}
 
 }
 
-void FontManager_DrawString(char* text, int x, int y) 
+void FontManager_DrawString(char* text, int x, int y, int color) 
 {
 	FT_GlyphSlot  slot;
 	FT_Matrix     matrix;                 /* transformation matrix */
@@ -320,7 +326,7 @@ void FontManager_DrawString(char* text, int x, int y)
 		/* now, draw to our target surface (convert position) */
 		FontManager_FillBitmap( &slot->bitmap,
 				 slot->bitmap_left + x,
-				 gFontManager.fontHeight - slot->bitmap_top + y);
+				 gFontManager.fontHeight - slot->bitmap_top + y, color);
 
 		/* increment pen position */
 		pen.x += slot->advance.x;

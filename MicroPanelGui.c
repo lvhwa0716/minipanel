@@ -321,7 +321,7 @@ void mpGui_Line(int x1, int y1, int x2, int y2)
 }
 void mpGui_DrawString(int x, int y, char *String /* only UTF8 */)
 {
-	FontManager_DrawString(String, x , y);
+	FontManager_DrawString(String, x , y, gMicroPanel.color);
 }
 void mpGui_DrawBitmap(int dstx, int dsty, unsigned char* bmp, int bmp_w, int bmp_h, int bmp_pitch , int bmp_bpp)
 {
@@ -450,7 +450,12 @@ void mpGui_Init(void)
 	OledDriver_intfApp_Init();
 
 	// Draw Logo
-	mpGui_DrawBitmap(0, 0, (unsigned char*)IMG_logo.pData, IMG_logo.width, IMG_logo.height, IMG_logo.bpl , 1);
+	//mpGui_DrawBitmap(0, 0, (unsigned char*)IMG_logo.pData, IMG_logo.width, IMG_logo.height, IMG_logo.bpl , 1);
+	mpGui_SetColor(0);
+	mpGui_FontSize(16,16);
+	mpGui_FillRect(0, 0, 128, 32);
+	mpGui_SetColor(1);
+	mpGui_DrawString(4, 4, "Start...");
 	mpGui_UpdateScreen(0,0,MICROPANEL_WIDTH, MICROPANEL_HEIGHT);
 }
 

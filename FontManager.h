@@ -29,7 +29,7 @@ struct FontManager_Struct {
 
 // when framebuffer == NULL, must give FontManager_ShowCallbak, or ignore it, or nothing to show
 int FontManager_Init(int screen_w, int screen_h, int bpp , int bpl, unsigned char* framebuffer,FontManager_ShowCallbak cb);
-void FontManager_DrawString(char* text, int x, int y);
+void FontManager_DrawString(char* text, int x, int y, int color);
 void FontManager_ClearBitmap(void);
 void FontManager_DeInit(void);
 void FontManager_Show(void); 
