@@ -35,5 +35,12 @@ void FontManager_DeInit(void);
 void FontManager_Show(void); 
 void FontManager_FontSize(int width, int height); 
 
+/*
+	lang :
+		0 = english
+		1 = chinese
+*/
+int FontManager_SetFont(int lang, char* fontFile); 
+
 void FontManager_ShowCallback_Sample(unsigned char *bitmap, int w, int h, int bpl, int bpp);
 #endif // __FONTMANAGER_H__

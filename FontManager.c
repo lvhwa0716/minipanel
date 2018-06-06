@@ -5,15 +5,18 @@
 #include "MicroPanelGui.h"
 #include "math.h"
 
-static const char* gFontFile[gFontSize] = {
-	#ifdef ANDROID
-		"/system/fonts/Roboto-Regular.ttf", // English from Android
-		"/system/fonts/NotoSansSC-Regular.otf" // SimpleChinese for Android
-	#else
-		"/home/lvh/freetype/Padauk.ttf", // English from Android
-		"/home/lvh/freetype/NotoSansSC-Regular.otf" // SimpleChinese for Android
-	#endif
-	
+#define PATH_LIMIT	511
+
+#ifdef ANDROID
+	#define DEFAULT_LANG_EN "/system/fonts/Roboto-Regular.ttf" // English from Android
+	#define DEFAULT_LANG_CN "/system/fonts/NotoSansSC-Regular.otf" // SimpleChinese for Android
+#else
+	#define DEFAULT_LANG_EN "/home/lvh/freetype/Padauk.ttf" // English from Android
+	#define DEFAULT_LANG_CN "/home/lvh/freetype/NotoSansSC-Regular.otf" // SimpleChinese for Android
+#endif
+static char gFontFile[gFontSize][PATH_LIMIT + 1] = {
+	DEFAULT_LANG_EN,
+	DEFAULT_LANG_CN
 };
 
 
@@ -27,6 +30,23 @@ static void FontManager_ShowCallback_Dummy(unsigned char *bitmap, int w, int h, 
 	h = h;
 	bpl = bpl;
 	bpp = bpp;
+}
+
+static int FontManager_LoadFont(int index)
+{
+	int error;
+
+	if(gFontManager.faces[index] != NULL)
+		FT_Done_Face( gFontManager.faces[index] );
+
+	error = FT_New_Face( gFontManager.library, gFontFile[index], 0, &gFontManager.faces[index] );
+	if(error) return error;
+	error = FT_Select_Charmap( gFontManager.faces[index], FT_ENCODING_UNICODE );
+	if(error) return error;
+	error = FT_Set_Pixel_Sizes(gFontManager.faces[index], gFontManager.fontWidth, gFontManager.fontHeight);
+	if(error) return error;
+	
+	return error;
 }
 
 int FontManager_Init(int screen_w, int screen_h, int bpp, int bpl, unsigned char* framebuffer, FontManager_ShowCallbak cb) 
@@ -57,10 +77,7 @@ int FontManager_Init(int screen_w, int screen_h, int bpp, int bpl, unsigned char
 	int i;
 	for( i = 0; i < gFontSize ; i++)
 	{
-		error = FT_New_Face( gFontManager.library, gFontFile[i], 0, &gFontManager.faces[i] );
-		
-		error = FT_Select_Charmap( gFontManager.faces[i], FT_ENCODING_UNICODE );
-		error = FT_Set_Pixel_Sizes(gFontManager.faces[i], gFontManager.fontWidth, gFontManager.fontHeight);
+		error = FontManager_LoadFont(i);
 	}
 	double angle = ( 0.0 / 360 ) * 3.14159 * 2;      /* use 25 degrees     */
 	/* set up matrix */
@@ -304,6 +321,8 @@ void FontManager_DrawString(char* text, int x, int y, int color)
 		for( ; face_index < gFontSize ; face_index++)
 		{
 			FT_UInt glyph_index = (FT_UInt)ch;
+			if(gFontManager.faces[face_index] == NULL)
+				continue;
 			if ( gFontManager.faces[face_index]->charmap )
 				glyph_index = FT_Get_Char_Index( gFontManager.faces[face_index], ch );
 
@@ -422,3 +441,28 @@ void FontManager_FontSize(int width, int height)
 	}
 }
 
+int FontManager_SetFont(int lang, char* fontFile)
+{
+	if(strlen(fontFile) >= PATH_LIMIT)
+	{
+		DBG_ERR( "Change Fontfile too long(<%d) %s",PATH_LIMIT , fontFile);
+		return -1;
+	}
+	if(( lang >= 0) && (lang < gFontSize) )
+	{
+		strcpy(gFontFile[lang],fontFile);
+		int result = FontManager_LoadFont(lang);
+		if(result) {
+			// load default
+			switch(lang) {
+				case 0: strcpy(gFontFile[lang],DEFAULT_LANG_EN); break;
+				case 1: strcpy(gFontFile[lang],DEFAULT_LANG_CN); break;
+				default: break;
+			}
+			FontManager_LoadFont(lang);
+		}
+		return result;
+	}
+
+	return -2;
+}

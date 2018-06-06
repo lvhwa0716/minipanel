@@ -524,6 +524,10 @@ void mpGui_FontSize(int width, int height)
 	FontManager_FontSize(width, height);
 }
 
+int mpGui_SetFont(int lang, char *fontFile)
+{
+	return FontManager_SetFont(lang, fontFile); 
+}
 
 static void mpGui_Print2Console(void)
 {
@@ -555,3 +559,5 @@ static void mpGui_Print2Console(void)
 	#endif
 
 }
+
+

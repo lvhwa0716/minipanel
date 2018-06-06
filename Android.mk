@@ -17,7 +17,12 @@
 
 LOCAL_PATH:= $(call my-dir)
 
-src_files := FontManager.c MicroPanelGui.c MicroPanelService.cpp MicroPanelHttpDebug.cpp
+src_files := \
+	FontManager.c \
+	MicroPanelGui.c \
+	MicroPanelService.cpp \
+	MicroPanelServiceClient.cpp \
+	MicroPanelHttpDebug.cpp
 
 src_files += OledDriver_intfApp.c
 
@@ -161,6 +166,23 @@ LOCAL_SHARED_LIBRARIES := \
 
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE := minipanelDriverTest
+
+include $(BUILD_EXECUTABLE)
+
+
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES := MicroPanelServiceClient.cpp ServicesTest.cpp
+
+LOCAL_CFLAGS += $(local_define)
+
+LOCAL_SHARED_LIBRARIES := \
+    liblog \
+    libutils \
+    libbinder \
+    libcutils
+
+LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE := minipanelServiceTest
 
 include $(BUILD_EXECUTABLE)
 

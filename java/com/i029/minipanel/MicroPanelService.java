@@ -222,5 +222,16 @@ public class MicroPanelService {
 		} catch(RemoteException e) {
 		}
 	}
-	
+	public int SetFont(int lang, String fontFile) {
+		IMicroPanelService microPanelService = getIMicroPanelService();
+		if( microPanelService == null) {
+			Log.e(TAG, "Native Service not found FontSize ");
+			return -200;
+		}
+		try {
+			return microPanelService.FontFile( lang, fontFile);
+		} catch(RemoteException e) {
+		}
+		return -100;
+	}	
 }

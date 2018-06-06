@@ -19,6 +19,7 @@ interface IMicroPanelService {
 	void Rect(int x, int y, int w, int h);
 	void FillRect(int x, int y, int w, int h);
 	void FontSize(int w, int h);
+	int FontFile(int lang, in String fontFile);
 	// add more here
 	
 }

@@ -19,6 +19,27 @@
 
 namespace android {
 
+	enum{  
+		MICROPANEL_SLEEP		= IBinder::FIRST_CALL_TRANSACTION + 0,
+		MICROPANEL_WAKEUP		= IBinder::FIRST_CALL_TRANSACTION + 1, 
+		MICROPANEL_BRIGHTNESS	= IBinder::FIRST_CALL_TRANSACTION + 2,
+		MICROPANEL_UPADTESCREEN = IBinder::FIRST_CALL_TRANSACTION + 3,
+		MICROPANEL_DRAWSTRING	= IBinder::FIRST_CALL_TRANSACTION + 4,
+		MICROPANEL_DRAWBITMAP	= IBinder::FIRST_CALL_TRANSACTION + 5,
+		MICROPANEL_SETCOLOR		= IBinder::FIRST_CALL_TRANSACTION + 6,
+	// following can do in app
+		MICROPANEL_CLEARALL		= IBinder::FIRST_CALL_TRANSACTION + 7,
+		MICROPANEL_DRAWPIXEL	= IBinder::FIRST_CALL_TRANSACTION + 8,
+		MICROPANEL_READPIXEL	= IBinder::FIRST_CALL_TRANSACTION + 9,
+		MICROPANEL_HLINE		= IBinder::FIRST_CALL_TRANSACTION + 10,
+		MICROPANEL_VLINE		= IBinder::FIRST_CALL_TRANSACTION + 11,
+		MICROPANEL_LINE			= IBinder::FIRST_CALL_TRANSACTION + 12,
+		MICROPANEL_RECT			= IBinder::FIRST_CALL_TRANSACTION + 13,
+		MICROPANEL_FILLRECT		= IBinder::FIRST_CALL_TRANSACTION + 14,
+		MICROPANEL_FONTSIZE		= IBinder::FIRST_CALL_TRANSACTION + 15,
+		MICROPANEL_FONTFILE		= IBinder::FIRST_CALL_TRANSACTION + 16,
+
+	};
 
 	class IMicroPanelService : public IInterface
     {
@@ -45,8 +66,38 @@ namespace android {
 			virtual void Brightness(int b) = 0;
 			virtual void UpdateScreen(int x, int y, int w, int h) = 0;
 			virtual void FontSize(int w, int h) = 0;
+			virtual int FontFile(int lang, String16 fontFile) = 0;
     };
+	class BpMicroPanelService: public BpInterface<IMicroPanelService> {
+		public:
+			BpMicroPanelService(const sp<IBinder>& impl)
+				: BpInterface<IMicroPanelService>(impl)
+			{
+			}
 
+			// IMicroPanelService
+			void Rect(int x, int y, int w, int h) ;
+			void FillRect(int x, int y, int w, int h) ;
+			void ClearAll() ;
+			void SetColor(int color) ;
+			void DrawPixel(int x, int y, int color);
+			int ReadPixel(int x, int y) ;
+			void HLine(int x1, int x2, int y) ;
+			void VLine(int x, int y1, int y2) ;
+			void Line(int x1, int y1, int x2, int y2);
+			void DrawString(int x, int y, String16 str );
+			void DrawBitmap(int x, int y, int bmp_w, int bmp_h, int bmp_pitch , int bmp_bpp, unsigned char* bmp) ;
+
+
+			//void Init(void);
+			//void DeInit(void);
+			void Sleep(int level);
+			void Wakeup(void);
+			void Brightness(int b);
+			void UpdateScreen(int x, int y, int w, int h);
+			void FontSize(int w, int h);
+			int FontFile(int lang, String16 fontFile);
+	};
 	class BnMicroPanelService: public BnInterface<IMicroPanelService> {
 		public:
 			virtual status_t onTransact(uint32_t code, const Parcel& data,
@@ -92,8 +143,10 @@ namespace android {
 		void Brightness(int b);
 		void UpdateScreen(int x, int y, int w, int h);
 		void FontSize(int w, int h);
+		int FontFile(int lang, String16 fontFile);
 	}; // class Module
 
+	
 }  
 
 #endif // #ifndef __MICROPANELSERVICE_H__

@@ -26,264 +26,13 @@ extern "C" unsigned char * OledDriver_intfApp_getFrameBuf(void);
 
 namespace android {  
 
-	enum{  
-		MICROPANEL_SLEEP		= IBinder::FIRST_CALL_TRANSACTION + 0,
-		MICROPANEL_WAKEUP		= IBinder::FIRST_CALL_TRANSACTION + 1, 
-		MICROPANEL_BRIGHTNESS	= IBinder::FIRST_CALL_TRANSACTION + 2,
-		MICROPANEL_UPADTESCREEN = IBinder::FIRST_CALL_TRANSACTION + 3,
-		MICROPANEL_DRAWSTRING	= IBinder::FIRST_CALL_TRANSACTION + 4,
-		MICROPANEL_DRAWBITMAP	= IBinder::FIRST_CALL_TRANSACTION + 5,
-		MICROPANEL_SETCOLOR		= IBinder::FIRST_CALL_TRANSACTION + 6,
-	// following can do in app
-		MICROPANEL_CLEARALL		= IBinder::FIRST_CALL_TRANSACTION + 7,
-		MICROPANEL_DRAWPIXEL	= IBinder::FIRST_CALL_TRANSACTION + 8,
-		MICROPANEL_READPIXEL	= IBinder::FIRST_CALL_TRANSACTION + 9,
-		MICROPANEL_HLINE		= IBinder::FIRST_CALL_TRANSACTION + 10,
-		MICROPANEL_VLINE		= IBinder::FIRST_CALL_TRANSACTION + 11,
-		MICROPANEL_LINE			= IBinder::FIRST_CALL_TRANSACTION + 12,
-		MICROPANEL_RECT			= IBinder::FIRST_CALL_TRANSACTION + 13,
-		MICROPANEL_FILLRECT		= IBinder::FIRST_CALL_TRANSACTION + 14,
-		MICROPANEL_FONTSIZE		= IBinder::FIRST_CALL_TRANSACTION + 15,
-
-	};
-	
 	void mpGui_DrawString16(int x, int y, String16 str)
 	{
 		String8 str8(str);
 		DBG_LOG("mpGui_DrawString16 : %s\n",str8.string());
 		mpGui_DrawString(x, y, (char*)str8.string());
 	}
-	class BpMicroPanelService: public BpInterface<IMicroPanelService>
-	{
-		public:
-			BpMicroPanelService(const sp<IBinder>& impl)
-				: BpInterface<IMicroPanelService>(impl)
-			{
-			}
-
-			// IMicroPanelService
-			void Rect(int x, int y, int w, int h) 
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-				data.writeInt32(x);
-				data.writeInt32(y);
-				data.writeInt32(w);
-				data.writeInt32(h);
-				if (remote()->transact(MICROPANEL_RECT, data, &reply) != NO_ERROR) {
-					DBG_ERR("Rect could not contact remote\n");
-				}
-
-			}
-			void FillRect(int x, int y, int w, int h) 
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-				data.writeInt32(x);
-				data.writeInt32(y);
-				data.writeInt32(w);
-				data.writeInt32(h);
-				if (remote()->transact(MICROPANEL_FILLRECT, data, &reply) != NO_ERROR) {
-					DBG_ERR("FillRect could not contact remote\n");
-				}
-
-			}
-			void ClearAll() 
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-
-				if (remote()->transact(MICROPANEL_CLEARALL, data, &reply) != NO_ERROR) {
-					DBG_ERR("ClearAll could not contact remote\n");
-				}
-
-			}
-			void SetColor(int color) 
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-				data.writeInt32(color);
-
-				if (remote()->transact(MICROPANEL_SETCOLOR, data, &reply) != NO_ERROR) {
-					DBG_ERR("SetColor could not contact remote\n");
-
-				}
-
-			}
-			void DrawPixel(int x, int y, int color) 
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-				data.writeInt32(x);
-				data.writeInt32(y);
-				data.writeInt32(color);
-				if (remote()->transact(MICROPANEL_DRAWPIXEL, data, &reply) != NO_ERROR) {
-					DBG_ERR("DrawPixel could not contact remote\n");
 	
-				}
-
-			}
-			int ReadPixel(int x, int y) 
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-				data.writeInt32(x);
-				data.writeInt32(y);
-
-				if (remote()->transact(MICROPANEL_READPIXEL, data, &reply) != NO_ERROR) {
-					DBG_ERR("ReadPixel could not contact remote\n");
-					return 0;
-				}
-
-				return reply.readInt32();
-			}
-			void HLine(int x1, int x2, int y) 
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-				data.writeInt32(x1);
-				data.writeInt32(x2);
-				data.writeInt32(y);
-
-				if (remote()->transact(MICROPANEL_HLINE, data, &reply) != NO_ERROR) {
-					ALOGD("HLine could not contact remote\n");
-				}
-
-			}
-			void VLine(int x, int y1, int y2) 
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-				data.writeInt32(x);
-				data.writeInt32(y1);
-				data.writeInt32(y2);
-				if (remote()->transact(MICROPANEL_VLINE, data, &reply) != NO_ERROR) {
-					DBG_ERR("VLine could not contact remote\n");
-
-				}
-
-			}
-			void Line(int x1, int y1, int x2, int y2) 
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-				data.writeInt32(x1);
-				data.writeInt32(y1);
-				data.writeInt32(x2);
-				data.writeInt32(y2);
-				if (remote()->transact(MICROPANEL_LINE, data, &reply) != NO_ERROR) {
-					ALOGD("Line could not contact remote\n");
-				}
-
-			}
-			void DrawString(int x, int y, String16 str ) 
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-				data.writeInt32(x);
-				data.writeInt32(y);
-				data.writeString16(str);
-				if (remote()->transact(MICROPANEL_DRAWSTRING, data, &reply) != NO_ERROR) {
-					DBG_ERR("DrawString could not contact remote\n");
-
-				}
-
-			}
-			void DrawBitmap(int x, int y, int bmp_w, int bmp_h, int bmp_pitch , int bmp_bpp, unsigned char* bmp) 
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-				data.writeInt32(x);
-				data.writeInt32(y);
-				data.writeInt32(bmp_w);
-				data.writeInt32(bmp_h);
-				data.writeInt32(bmp_pitch);
-				data.writeInt32(bmp_bpp);
-				int32_t length = bmp_pitch * bmp_h;
-			#if defined(HAS_readByteVector)
-					std::vector<uint8_t> bmData( length);
-					memcpy(bmData.data(), bmp, length);
-					status_t err = data.writeByteVector(bmData); 
-					if (err != NO_ERROR) {
-						return ;
-					}
-			#else
-					
-					data.writeInt32(length);
-
-					unsigned char* bmData = (unsigned char*)data.writeInplace(length);
-					memcpy(bmData, bmp, length);
-
-			#endif
-				if (remote()->transact(MICROPANEL_DRAWBITMAP, data, &reply) != NO_ERROR) {
-					DBG_ERR("DrawBitmap could not contact remote\n");
-				}
-
-			}
-
-
-			//void Init(void);
-			//void DeInit(void);
-			void Sleep(int level)
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-				data.writeInt32(level);
-
-				if (remote()->transact(MICROPANEL_SLEEP, data, &reply) != NO_ERROR) {
-					DBG_ERR("Sleep could not contact remote\n");
-				}
-
-			}
-			void Wakeup(void)
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-
-				if (remote()->transact(MICROPANEL_WAKEUP, data, &reply) != NO_ERROR) {
-					DBG_ERR("Wakeup could not contact remote\n");
-
-				}
-
-			}
-			void Brightness(int b)
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-				data.writeInt32(b);
-
-
-				if (remote()->transact(MICROPANEL_BRIGHTNESS, data, &reply) != NO_ERROR) {
-					DBG_ERR("Brightness could not contact remote\n");
-				}
-			}
-			void UpdateScreen(int x, int y, int w, int h)
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-				data.writeInt32(x);
-				data.writeInt32(y);
-				data.writeInt32(w);
-				data.writeInt32(h);
-				if (remote()->transact(MICROPANEL_UPADTESCREEN, data, &reply) != NO_ERROR) {
-					DBG_ERR("UpdateScreen could not contact remote\n");
-				}
-			}
-			void FontSize(int w, int h)
-			{
-				Parcel data, reply;
-				data.writeInterfaceToken(IMicroPanelService::getInterfaceDescriptor());
-				data.writeInt32(w);
-				data.writeInt32(h);
-				if (remote()->transact(MICROPANEL_FONTSIZE, data, &reply) != NO_ERROR) {
-					DBG_ERR("FontSize could not contact remote\n");
-				}
-			}
-
-	};
-	
-	IMPLEMENT_META_INTERFACE(MicroPanelService, "com.i029.minipanel.IMicroPanelService");
-
 	BnMicroPanelService::BnMicroPanelService() {  
 		DBG_LOG("MicroPanelService created");  
 	}
@@ -454,6 +203,16 @@ namespace android {
 					return NO_ERROR;  
 				}
 				break;
+			case MICROPANEL_FONTFILE : {
+					CHECK_INTERFACE(IMicroPanelService, data, reply);
+					int lang = data.readInt32();
+					String16 str = data.readString16();
+					int result = FontFile(lang, str);
+				    reply->writeNoException();
+				    reply->writeInt32(result);
+					return NO_ERROR;
+				}
+				break;
 			default:
 				return BBinder::onTransact(code,data,reply,flags);  
 		}  
@@ -536,6 +295,11 @@ namespace android {
 	void MicroPanelService::FontSize(int w, int h)
 	{
 		mpGui_FontSize( w,  h);
+	}
+	int MicroPanelService::FontFile(int lang, String16 fontFile)
+	{
+		String8 str8(fontFile);
+		return mpGui_SetFont( lang, (char*)str8.string());
 	}
 	status_t MicroPanelService::dump(int fd, const Vector<String16>& args)
 	{
