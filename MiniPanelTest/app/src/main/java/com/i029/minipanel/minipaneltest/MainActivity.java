@@ -4,9 +4,12 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -14,6 +17,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.i029.minipanel.GrafixHelp;
 import com.i029.minipanel.MicroPanelService;
 
 import java.nio.Buffer;
@@ -33,6 +37,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private EditText p4;
     private EditText Result;
 
+    private GrafixHelp grafixHelp;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,12 +82,18 @@ public class MainActivity extends Activity implements View.OnClickListener {
         btn= (Button)findViewById(R.id.buttonFontSize);
         btn.setOnClickListener(this);
 
+        btn= (Button)findViewById(R.id.buttonCanvasDraw);
+        btn.setOnClickListener(this);
+
         String[] services = MicroPanelService.listService();
         if(services != null) {
             for(String s : services) {
                 Log.e(TAG, s);
             }
         }
+
+        grafixHelp = new GrafixHelp();
+
         microPanelService = MicroPanelService.getInstance();
 
         if (microPanelService == null) {
@@ -102,6 +113,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         try {
             switch (arg0.getId())
             {
+                case R.id.buttonCanvasDraw:
+                    canvasDrawSample();
+                    break;
+
                 case R.id.buttonSleep:
                     microPanelService.Sleep(Integer.parseInt(p1.getText().toString()));
                     break;
@@ -235,7 +250,33 @@ public class MainActivity extends Activity implements View.OnClickListener {
             e.printStackTrace();
         }
     }
+    private void canvasDrawSample() {
+        Canvas m = grafixHelp.getCanvas();
 
+        // clear all
+        m.drawColor(Color.BLACK, PorterDuff.Mode.CLEAR);
+        // Draw Text
+        Paint textPaint = new Paint();
+
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextSize(28);
+        textPaint.setStyle(Paint.Style.FILL);
+
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
+        float top = fontMetrics.top;//为基线到字体上边框的距离,即上图中的top
+        float bottom = fontMetrics.bottom;//为基线到字体下边框的距离,即上图中的bottom
+
+        Rect rect = new Rect(0,0,128,32);
+
+        int baseLineY = (int) (rect.centerY() - top/2 - bottom/2);//基线中间点的y轴计算公式
+
+        m.drawText("Canvas画布",rect.centerX(),baseLineY,textPaint);
+
+
+        grafixHelp.updateScreen();
+
+    }
     static final byte[] test1_rawdata = {
             (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,
             (byte)0x00,  (byte)0x00,  (byte)0x00,  (byte)0x00,

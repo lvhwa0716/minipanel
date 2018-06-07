@@ -44,6 +44,20 @@
             android:orientation="horizontal">
 
             <Button
+                android:id="@+id/buttonCanvasDraw"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="CanvasDraw" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <Button
                 android:id="@+id/buttonBltBit"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
