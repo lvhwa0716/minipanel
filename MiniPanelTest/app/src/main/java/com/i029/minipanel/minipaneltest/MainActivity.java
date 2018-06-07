@@ -37,7 +37,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private EditText p4;
     private EditText Result;
 
-    private GrafixHelp grafixHelp;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,7 +92,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             }
         }
 
-        grafixHelp = new GrafixHelp();
+
 
         microPanelService = MicroPanelService.getInstance();
 
@@ -251,30 +251,77 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
     private void canvasDrawSample() {
-        Canvas m = grafixHelp.getCanvas();
 
-        // clear all
-        m.drawColor(Color.BLACK, PorterDuff.Mode.CLEAR);
-        // Draw Text
-        Paint textPaint = new Paint();
+        {
+            GrafixHelp grafixHelp_activity_one = null;
+            // full screen
 
-        textPaint.setColor(Color.WHITE);
-        textPaint.setTextSize(28);
-        textPaint.setStyle(Paint.Style.FILL);
+            try {
+                grafixHelp_activity_one = new GrafixHelp(0, 0, GrafixHelp.OLED_WIDTH, GrafixHelp.OLED_HEIGHT);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return;
+            }
 
-        textPaint.setTextAlign(Paint.Align.CENTER);
-        Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
-        float top = fontMetrics.top;//为基线到字体上边框的距离,即上图中的top
-        float bottom = fontMetrics.bottom;//为基线到字体下边框的距离,即上图中的bottom
+            Canvas m = grafixHelp_activity_one.getCanvas();
 
-        Rect rect = new Rect(0,0,128,32);
+            // clear all
+            m.drawColor(Color.BLACK, PorterDuff.Mode.CLEAR);
+            // Draw Text
+            Paint textPaint = new Paint();
 
-        int baseLineY = (int) (rect.centerY() - top/2 - bottom/2);//基线中间点的y轴计算公式
+            textPaint.setColor(Color.WHITE);
+            textPaint.setTextSize(28);
+            textPaint.setStyle(Paint.Style.FILL);
 
-        m.drawText("Canvas画布",rect.centerX(),baseLineY,textPaint);
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
+            float top = fontMetrics.top;//为基线到字体上边框的距离,即上图中的top
+            float bottom = fontMetrics.bottom;//为基线到字体下边框的距离,即上图中的bottom
 
+            Rect rect = new Rect(0, 0, 128, 32);
 
-        grafixHelp.updateScreen();
+            int baseLineY = (int) (rect.centerY() - top / 2 - bottom / 2);//基线中间点的y轴计算公式
+
+            m.drawText("Canvas画布", rect.centerX(), baseLineY, textPaint);
+
+            //m.drawBitmap();
+            grafixHelp_activity_one.updateScreen();
+        }
+        //
+        {
+            GrafixHelp grafixHelp_activity_another = null;
+            try {
+                grafixHelp_activity_another = new GrafixHelp(32, 8, 64, 16);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return;
+            }
+
+            Canvas m = grafixHelp_activity_another.getCanvas();
+            // clear all
+            m.drawColor(Color.BLACK, PorterDuff.Mode.CLEAR);
+            // Draw Text
+            Paint textPaint = new Paint();
+
+            textPaint.setColor(Color.WHITE);
+            textPaint.setTextSize(12);
+            textPaint.setStyle(Paint.Style.FILL);
+
+            textPaint.setTextAlign(Paint.Align.CENTER);
+            Paint.FontMetrics fontMetrics = textPaint.getFontMetrics();
+            float top = fontMetrics.top;//为基线到字体上边框的距离,即上图中的top
+            float bottom = fontMetrics.bottom;//为基线到字体下边框的距离,即上图中的bottom
+
+            Rect rect = new Rect(0, 0, 64, 16);
+
+            int baseLineY = (int) (rect.centerY() - top / 2 - bottom / 2);//基线中间点的y轴计算公式
+
+            m.drawText("Win窗口", rect.centerX(), baseLineY, textPaint);
+
+            //m.drawBitmap();
+            grafixHelp_activity_another.updateScreen();
+        }
 
     }
     static final byte[] test1_rawdata = {

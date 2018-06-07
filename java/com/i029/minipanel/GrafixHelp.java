@@ -12,13 +12,32 @@ import com.i029.minipanel.MicroPanelService;
  */
 
 public class GrafixHelp {
-    public static final int WIDTH = 128;
-    public static final int HEIGHT = 32;
+    public static final int OLED_WIDTH = 128;
+    public static final int OLED_HEIGHT = 32;
     private Bitmap bmpFrameBuffer = null;
     private Canvas mCanvas = null;
+    private int offset_x = 0;
+    private int offset_y = 0;
 
-    public GrafixHelp() {
-        bmpFrameBuffer = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888);
+    public GrafixHelp(int x, int y , int w , int h) throws Exception {
+
+		if((x < 0 ) || (y < 0) || (x >= OLED_WIDTH) || (y >= OLED_HEIGHT)) {
+			throw new Exception("0 =< x < 127  &&  0 =< y < 31");
+		}
+
+		if( ( w < 0 ) || (h < 0) ) {
+			throw new Exception("w and h must gt(>) 0 ");
+		}
+
+		if(  ( (x + w) > OLED_WIDTH ) 
+			|| ( (y + h) > OLED_HEIGHT ) ) {
+			throw new Exception("oled size 128*32 , check parameters ");
+		}
+
+        bmpFrameBuffer = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+		offset_x = x;
+		offset_y = y;
+
         mCanvas = new Canvas(bmpFrameBuffer);
     }
     public Canvas getCanvas() {
@@ -27,8 +46,8 @@ public class GrafixHelp {
 
     public void updateScreen() {
         MicroPanelService server = MicroPanelService.getInstance();
-        server.DrawBitMap(0,0, bmpFrameBuffer);
-        server.UpdateScreen(0,0,WIDTH -1, HEIGHT - 1);
+        server.DrawBitMap(offset_x, offset_y, bmpFrameBuffer);
+        server.UpdateScreen(0,0,OLED_WIDTH -1, OLED_HEIGHT - 1);
     }
 
     public void wakeUp() {
