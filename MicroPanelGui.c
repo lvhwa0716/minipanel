@@ -323,7 +323,8 @@ void mpGui_DrawString(int x, int y, char *String /* only UTF8 */)
 {
 	FontManager_DrawString(String, x , y, gMicroPanel.color);
 }
-void mpGui_DrawBitmap(int dstx, int dsty, unsigned char* bmp, int bmp_w, int bmp_h, int bmp_pitch , int bmp_bpp)
+
+static void mpGui_DrawBitmap1(int dstx, int dsty, unsigned char* bmp, int bmp_w, int bmp_h, int bmp_pitch )
 {
 	int		i;
 	struct MicroPanel_Struct* dstpsd = &gMicroPanel;
@@ -336,13 +337,6 @@ void mpGui_DrawBitmap(int dstx, int dsty, unsigned char* bmp, int bmp_w, int bmp
 	int w = bmp_w;
 	int h = bmp_h;
 
-	bmp_bpp = bmp_bpp; // not used , must set 1
-
-	if(bmp_bpp != 1)
-	{
-		DBG_ERR( " bmp_bpp != 1 , ignore\n");
-		return;
-	}
 	// need clip
 	if(dstx < 0)
 	{
@@ -416,6 +410,99 @@ void mpGui_DrawBitmap(int dstx, int dsty, unsigned char* bmp, int bmp_w, int bmp
 			src += spitch;
 		}
 	#endif
+}
+
+static void mpGui_DrawBitmap8(int dstx, int dsty, unsigned char* bmp, int bmp_w, int bmp_h, int bmp_pitch )
+{
+	int		i;
+	struct MicroPanel_Struct* dstpsd = &gMicroPanel;
+	int srcx = 0;
+	int srcy = 0;
+
+	int		dpitch = dstpsd->bpl;
+	int		spitch = bmp_pitch;
+
+	int w = bmp_w;
+	int h = bmp_h;
+
+	// need clip
+	if(dstx < 0)
+	{
+		srcx = -dstx;
+		w = w + dstx;
+		dstx = 0;
+
+	}
+	if(dsty < 0)
+	{
+		srcy = -dsty;
+		h = h + dsty;
+		dsty = 0;
+	}
+
+	if( (dstx + w) > dstpsd->width)
+	{
+		w = dstpsd->width - dstx;
+	}
+
+	if( (dsty + h) > dstpsd->height)
+	{
+		h = dstpsd->height - dsty;
+	}
+
+	if((h <= 0) || (w <= 0))
+	{
+		return;
+	}
+	#if (MICROPANEL_BPP == 1)
+		/* src is LSB 1bpp, dst is LSB 1bpp*/
+		unsigned char* dst = ((unsigned char*)dstpsd->buffer) + (dstx>>3) + dsty * dpitch;
+		unsigned char* src = ((unsigned char*)bmp) + srcx + srcy * spitch;
+
+
+		while(--h >= 0) {
+			unsigned char*	d = dst;
+			unsigned char*	s = src;
+			int	dx = dstx;
+			int	sx = srcx;
+
+			for(i=0; i<w; ++i) {
+				*d = (*d & notmask[dx&7]) | ((*s & 0x80) ? (1 << (7 - (dx&7))): 0) ;
+				if((++dx & 7) == 0)
+					++d;
+				++s;
+			}
+			dst += dpitch;
+			src += spitch;
+		}
+	#elif (MICROPANEL_BPP == 8)
+		/* src is LSB 1bpp, dst is LSB 8bpp*/
+		unsigned char* dst = ((unsigned char*)dstpsd->buffer) + (dstx) + dsty * dpitch;
+		unsigned char* src = ((unsigned char*)bmp) + (srcx>>3) + srcy * spitch;
+
+
+		while(--h >= 0) {
+			unsigned char*	d = dst;
+			unsigned char*	s = src;
+			int	dx = dstx;
+			int	sx = srcx;
+
+			for(i=0; i<w; ++i) {
+				*d = *s;
+				++d;
+				++s;
+			}
+			dst += dpitch;
+			src += spitch;
+		}
+	#endif
+}
+void mpGui_DrawBitmap(int dstx, int dsty, unsigned char* bmp, int bmp_w, int bmp_h, int bmp_pitch , int bmp_bpp)
+{
+	if(bmp_bpp == 1)
+		mpGui_DrawBitmap1(dstx, dsty, bmp, bmp_w, bmp_h, bmp_pitch );
+	else if(bmp_bpp == 8)
+		mpGui_DrawBitmap8(dstx, dsty, bmp, bmp_w, bmp_h, bmp_pitch );
 }
 
 extern void OledDriver_intfApp_Init(void);

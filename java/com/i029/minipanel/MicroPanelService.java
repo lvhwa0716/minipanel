@@ -5,6 +5,7 @@ import android.util.Log;
 import android.os.ServiceManager;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.graphics.Bitmap;
 
 public class MicroPanelService {
 	
@@ -233,5 +234,66 @@ public class MicroPanelService {
 		} catch(RemoteException e) {
 		}
 		return -100;
-	}	
+	}
+
+	/* must not scale
+		{
+                BitmapFactory.Options opt = new BitmapFactory.Options();
+                opt.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                opt.inDensity = 0;
+                opt.inTargetDensity = 0;
+                opt.inScreenDensity = 0;
+                opt.inScaled = false;
+                Bitmap bmp = BitmapFactory.decodeResource(getResources(), R.drawable.logo,opt);
+
+                DrawBitMap(Integer.parseInt(p1.getText().toString()), // dest x
+                        Integer.parseInt(p1.getText().toString()), // dest y
+                        bmp);
+                bmp.recycle();
+		}
+	*/
+	public void DrawBitMap(int x , int y, Bitmap img) {
+        int width, height;
+        height = img.getHeight();
+        width = img.getWidth();
+
+        int []pixels = new int[width * height];
+        byte []target_pixels = new byte[width * height];
+
+        img.getPixels(pixels, 0, width, 0, 0, width, height);
+
+        for(int i = 0; i < height; i++)  {
+            for(int j = 0; j < width; j++) {
+                int grey = pixels[width * i + j];
+
+                int red = ((grey  & 0x00FF0000 ) >> 16);
+                int green = ((grey & 0x0000FF00) >> 8);
+                int blue = (grey & 0x000000FF);
+
+                grey = (int)((float) red * 0.3 + (float)green * 0.59 + (float)blue * 0.11);
+
+                target_pixels[width * i + j] = (byte)grey;
+            }
+        }
+
+		IMicroPanelService microPanelService = getIMicroPanelService();
+		if( microPanelService == null) {
+			Log.e(TAG, "Native Service not found DrawBitmap ");
+			return ;
+		}
+		try {
+			microPanelService.DrawBitmap(
+                x,
+                y,
+                width,
+                height,
+                width,
+                8,
+                target_pixels
+        	);
+		} catch(RemoteException e) {
+		}
+
+        
+    }	
 }

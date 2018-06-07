@@ -1,6 +1,12 @@
 package com.i029.minipanel.minipaneltest;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -9,6 +15,9 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.i029.minipanel.MicroPanelService;
+
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
 
 public class MainActivity extends Activity implements View.OnClickListener {
     static final String TAG = "MiniPanelTest";
@@ -80,6 +89,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             Log.e(TAG, "MicroPanelService service is not initialized!");
             return ;
         }
+
     }
 
     @Override
@@ -182,15 +192,32 @@ public class MainActivity extends Activity implements View.OnClickListener {
                     microPanelService.Brightness(Integer.parseInt(p1.getText().toString()));
                     break;
                 case R.id.buttonBltBit:
-                    microPanelService.DrawBitmap(
-                            Integer.parseInt(p1.getText().toString()), // dest x
-                            Integer.parseInt(p1.getText().toString()), // dest y
-                            30, // bmp width
-                            30, //bmp height
-                            4,  // bytes per line
-                            1, // must 1 , only support white/black
-                            test1_rawdata
-                    );
+                    if(true) {
+                        BitmapFactory.Options opt = new BitmapFactory.Options();
+                        opt.inPreferredConfig = Bitmap.Config.ARGB_8888;
+                        opt.inDensity = 0;
+                        opt.inTargetDensity = 0;
+                        opt.inScreenDensity = 0;
+                        opt.inScaled = false;
+                        Bitmap bmp = BitmapFactory.decodeResource(getResources(), R.drawable.test1,opt);
+
+                        microPanelService.DrawBitMap(
+                                Integer.parseInt(p1.getText().toString()),
+                                Integer.parseInt(p1.getText().toString()),
+                                bmp);
+
+                        bmp.recycle();
+                    } else {
+                        microPanelService.DrawBitmap(
+                                Integer.parseInt(p1.getText().toString()), // dest x
+                                Integer.parseInt(p1.getText().toString()), // dest y
+                                30, // bmp width
+                                30, //bmp height
+                                4,  // bytes per line
+                                1, // must 1 , only support white/black
+                                test1_rawdata
+                        );
+                    }
                     break;
                 case R.id.buttonFontSize:
                     microPanelService.FontSize(
